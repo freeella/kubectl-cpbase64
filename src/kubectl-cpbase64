@@ -77,20 +77,18 @@ function cpb64_parse_arguments {
     KUBERNETES_FILE=''
     LOCAL_FILE=''
 
-    echo "0=$0"
-
     # documentation options
-    # - version
-    if [ "$1" == "version" ]
-    then
-        cpb64_version
-        exit 0
-    fi
-
     # - help
     if [ "$#" -eq 0 ] || [[ "$1" =~ ^(help|-h|--help)$ ]]
     then
         cpb64_about
+        exit 0
+    fi
+
+    # - version
+    if [ "$1" == "version" ]
+    then
+        cpb64_version
         exit 0
     fi
 
@@ -121,7 +119,7 @@ function cpb64_parse_arguments {
             else
                 shift # past argument
                 echo "ERROR: No argument left for container name! Use: -c container_name" >&2
-                exit 11
+                exit 20
             fi
             continue
             ;;
@@ -146,7 +144,7 @@ function cpb64_parse_arguments {
                 if  [[ "${#remote_array[@]}" -ne 2 ]]
                 then
                     echo "ERROR: Wrong syntax of REMOTE location: $1" >&2
-                    exit 12
+                    exit 21
                 fi
                 KUBERNETES_FILE="${remote_array[1]}"
                 if [[ "${remote_array[0]}" =~ "/" ]]; then
@@ -173,7 +171,7 @@ function cpb64_parse_arguments {
         if [[ ! "${!required_var}" ]]
         then
             echo "ERROR: ${required_var} not defined! Please set FROM and TO location!" >&2
-            exit 13
+            exit 22
         fi
     done
 }
