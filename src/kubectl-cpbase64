@@ -1,0 +1,186 @@
+#!/usr/bin/env bash
+
+### config
+# - calculate defaults based on current directory
+FULLNAME=$(realpath ${BASH_SOURCE[0]})
+KUBECTL_CMD=$( echo $FULLNAME | sed 's|.*-||g' )
+BASEDIR=$(dirname ${FULLNAME})
+CPB64_VERSION=1.0.0
+DEBUG= # empty to disable
+#DEBUG=1 # any value to enable
+
+### functions
+# - debugging
+function cpb64_debug {
+    [[ $DEBUG ]] && echo "DEBUG: $@"
+    return 0
+}
+
+# - version
+function cpb64_version {
+    printf "Version: ${CPB64_VERSION} (${FULLNAME})\n"
+}
+
+# - documentation
+function cpb64_about {
+    cpb64_version
+
+    printf "\nUsage:\tkubectl ${KUBECTL_CMD} [from_location] [to_location] [-c container_name]\n\n"
+
+    printf "\t'kubectl ${KUBECTL_CMD}' tries to be an alternative to 'kubectl cp' \n\twhen 'tar' is not available. Command 'base64' is used instead.\n\n"
+    printf "\tCommand line syntax of 'kubectl ${KUBECTL_CMD}' is similar to 'kubectl cp'!\n\n"
+
+    printf "Command line examples:\n\n"
+    printf "\tkubectl ${KUBECTL_CMD} version - returns the version of this plugin\n"
+    printf "\tkubectl ${KUBECTL_CMD} help - returns this help screen\n\n"
+
+    printf "\n\t# Copy /tmp/foo from a remote pod to /tmp/bar locally\n"
+    printf "\tkubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo /tmp/bar\n"
+    printf "\tkubectl ${KUBECTL_CMD} <some-namespace>/<some-pod>:/tmp/foo /tmp/bar\n"
+    printf "\tkubectl ${KUBECTL_CMD} <some-namespace>/<some-pod>:/tmp/foo /tmp/bar -c <specific-container>\n"
+    printf "\tkubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo /tmp/bar -c <specific-container>\n"
+    printf "\n\t# Copy local /tmp/foo to a remote pod file /tmp/bar\n"
+    printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:/tmp/bar\n"
+    printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-namespace>/<some-pod>:/tmp/bar\n"
+    printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-namespace>/<some-pod>:/tmp/bar -c <specific-container>\n"
+    printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:/tmp/bar -c <specific-container>\n"
+}
+
+# - checking for required external tools
+function cpb64_dependency_check {
+
+    for command in base64 tr sed kubectl cat
+    do
+        if ! command -v ${command} >/dev/null
+        then
+            echo "ERROR: Client command '${command}' is required!" >&2
+            exit 10
+        fi
+    done
+}
+
+# - parsing commad line arguments with as less as possible dependencies
+#   not using CLOPT in order to reduce OS specific dependencies
+function cpb64_parse_arguments {
+    # TODO: case looks more elegant
+    # See: https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
+
+    # temp only
+    local is_container_name_next=0
+    local is_from_found=0
+    # to be used outside of the function
+    CONTAINER_NAME=''
+    COPY_FROM_LOCAL=1
+    KUBERNETES_NS=''
+    KUBERNETES_POD=''
+    KUBERNETES_FILE=''
+    LOCAL_FILE=''
+
+    for arg in "$@"
+    do
+        if [ -z "$arg" ]
+        then
+            echo "DEBUG: [EMPTY] argument found!"
+        else
+            #echo "ARG: $arg"
+            # special syntax for container name
+            if [ "${is_container_name_next:-0}" -eq 1 ]
+            then
+                CONTAINER_NAME="$arg"
+                is_container_name_next=0
+            elif [ "$arg" == "-d" ]
+            then
+                DEBUG=1
+            elif [ "$arg" == "-c" ]
+            then
+                is_container_name_next=1
+            # from here on location syntax
+            else
+                # this is the location to copy to
+                if [ "${is_from_found:-0}" -eq 0 ]
+                then
+                    # echo "FROM"
+                    is_from_found=1
+                    if [[ "$arg" =~ ":" ]]; then
+                        COPY_FROM_LOCAL=0
+                    fi
+                #else
+                #    echo "TO"
+                fi
+                #echo "ARG location: $arg"
+                if [[ "$arg" =~ ":" ]]; then
+                    # Need to split
+                    # echo "REMOTE"
+                    local remote_array=($(echo $arg | tr ":" "\n"))
+                    KUBERNETES_FILE="${remote_array[1]}"
+                    if [[ "${remote_array[0]}" =~ "/" ]]; then
+                        local remote_array2=($(echo "${remote_array[0]}" | tr "/" "\n"))
+                        KUBERNETES_NS="${remote_array2[0]}"
+                        KUBERNETES_POD="${remote_array2[1]}"
+                    else
+                        KUBERNETES_POD="${remote_array[0]}"
+                    fi
+                else
+                    LOCAL_FILE="$arg"
+                fi
+            fi
+
+        fi
+
+    done
+
+    # TODO - check whether remote and local file name had be provided, else print an error message what was missing
+    cpb64_debug "Found LOCAL_FILE: ${LOCAL_FILE} - REMOTE NS: ${KUBERNETES_NS} - REMOTE POD: ${KUBERNETES_POD} - REMOTE FILE: ${KUBERNETES_FILE} - REMOTE CONTAINER: '${CONTAINER_NAME}' - copy from local file? ($COPY_FROM_LOCAL)"
+}
+
+# - parsing commad line arguments with as less as possible dependencies
+function cpb64_execute_kubectl {
+    local container_command=''
+    local ns_command=''
+    local debug_command=''
+    [[ $DEBUG ]] && debug_command='set -x; '
+
+    if [[ "$CONTAINER_NAME" ]]
+    then
+        container_command="-c ${CONTAINER_NAME}"
+    fi
+
+    if [[ "$KUBERNETES_NS" ]]
+    then
+        ns_command="-n ${KUBERNETES_NS}"
+    fi
+
+    # Example: kubectl exec  -i pod -c container  -- base64 /tmp/test.hprof | base64 -d >test_via_base64.hprof
+    local kubectl_command_from_remote="kubectl exec -i ${KUBERNETES_POD} ${container_command} ${ns_command} -- base64 ${KUBERNETES_FILE} | base64 -d >${LOCAL_FILE}"
+    # mac os base64 has slightly different syntax, using cat as workaround
+    local kubectl_command_from_local="cat ${LOCAL_FILE} | base64 | kubectl exec -i ${KUBERNETES_POD} ${container_command} ${ns_command} -- sh -c 'base64 -d >${KUBERNETES_FILE}' "
+
+    # way: local -> remote
+    if [ "${COPY_FROM_LOCAL}" -eq 1 ]
+    then
+        bash -c "$debug_command $kubectl_command_from_local"
+    # way: remote -> local
+    else
+        bash -c "$debug_command $kubectl_command_from_remote"
+    fi
+}
+
+### main
+# optional argument handling
+if [ "$#" -eq 0 ] || [[ "$1" =~ ^(help|-h|--help)$ ]]
+then
+    cpb64_about
+    exit 0
+fi
+
+# optional argument handling
+if [ "$1" == "version" ]
+then
+    cpb64_version
+    exit 0
+fi
+
+# business logic from here on
+cpb64_dependency_check
+cpb64_parse_arguments "$@"
+cpb64_execute_kubectl
