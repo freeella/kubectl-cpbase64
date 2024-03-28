@@ -63,7 +63,6 @@ function cpb64_dependency_check {
 }
 
 # - parsing commad line arguments with as less as possible dependencies
-#   not using CLOPT in order to reduce OS specific dependencies
 function cpb64_parse_arguments {
     # temp only
     local is_container_name_next=0
@@ -176,7 +175,7 @@ function cpb64_parse_arguments {
     done
 }
 
-# - parsing commad line arguments with as less as possible dependencies
+# - executing kubectl for transferring the file
 function cpb64_execute_kubectl {
     local container_command=''
     local ns_command=''
