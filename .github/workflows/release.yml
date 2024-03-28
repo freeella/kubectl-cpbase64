@@ -13,8 +13,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.1.1
+      - name: Build artefacts
         run: |
-          zip --junk-paths src/kubectl-cpbase64
+          zip --junk-paths kubectl-cpbase64 src/kubectl-cpbase64
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
