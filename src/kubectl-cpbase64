@@ -28,7 +28,8 @@ function cpb64_about {
 
     printf "\nUsage:\tkubectl ${KUBECTL_CMD} [from_location] [to_location] [-c container_name]\n\n"
 
-    printf "\t'kubectl ${KUBECTL_CMD}' tries to be an alternative to 'kubectl cp' \n\twhen 'tar' is not available. Command 'base64' is used instead.\n\n"
+    printf "\t'kubectl ${KUBECTL_CMD}' tries to be an alternative to 'kubectl cp' \n"
+    printf "\twhen 'tar' is not available. Command 'base64' is used instead.\n\n"
     printf "\tCommand line syntax of 'kubectl ${KUBECTL_CMD}' is similar to 'kubectl cp'!\n\n"
 
     printf "Command line examples:\n\n"
@@ -49,6 +50,7 @@ function cpb64_about {
 
 # - checking for required external tools
 function cpb64_dependency_check {
+    local command
 
     for command in base64 tr sed kubectl cat realpath basename
     do
@@ -63,12 +65,10 @@ function cpb64_dependency_check {
 # - parsing commad line arguments with as less as possible dependencies
 #   not using CLOPT in order to reduce OS specific dependencies
 function cpb64_parse_arguments {
-    # TODO: case looks more elegant
-    # See: https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
-
     # temp only
     local is_container_name_next=0
     local is_from_found=0
+    local required_var
     # to be used outside of the function
     CONTAINER_NAME=''
     COPY_FROM_LOCAL=1
@@ -77,61 +77,105 @@ function cpb64_parse_arguments {
     KUBERNETES_FILE=''
     LOCAL_FILE=''
 
-    for arg in "$@"
-    do
-        if [ -z "$arg" ]
+    echo "0=$0"
+
+    # documentation options
+    # - version
+    if [ "$1" == "version" ]
+    then
+        cpb64_version
+        exit 0
+    fi
+
+    # - help
+    if [ "$#" -eq 0 ] || [[ "$1" =~ ^(help|-h|--help)$ ]]
+    then
+        cpb64_about
+        exit 0
+    fi
+
+    # - copy syntax
+    while [[ $# -gt 0 ]]; do
+
+        if [ -z "$1" ]
         then
-            echo "DEBUG: [EMPTY] argument found!"
-        else
-            #echo "ARG: $arg"
-            # special syntax for container name
-            if [ "${is_container_name_next:-0}" -eq 1 ]
-            then
-                CONTAINER_NAME="$arg"
-                is_container_name_next=0
-            elif [ "$arg" == "-d" ]
-            then
+            cpb64_debug "[EMPTY] argument found!"
+            shift # past argument
+            continue
+        fi
+
+        case $1 in
+            # - debug option
+            -d)
                 DEBUG=1
-            elif [ "$arg" == "-c" ]
+                shift # past argument
+                continue
+            ;;
+            # - container option
+            -c)
+            if [[ $# -gt 1 ]]
             then
-                is_container_name_next=1
-            # from here on location syntax
+                CONTAINER_NAME="$2"
+                shift # past argument
+                shift # past value
             else
-                # this is the location to copy to
-                if [ "${is_from_found:-0}" -eq 0 ]
-                then
-                    # echo "FROM"
-                    is_from_found=1
-                    if [[ "$arg" =~ ":" ]]; then
-                        COPY_FROM_LOCAL=0
-                    fi
-                #else
-                #    echo "TO"
-                fi
-                #echo "ARG location: $arg"
-                if [[ "$arg" =~ ":" ]]; then
-                    # Need to split
-                    # echo "REMOTE"
-                    local remote_array=($(echo $arg | tr ":" "\n"))
-                    KUBERNETES_FILE="${remote_array[1]}"
-                    if [[ "${remote_array[0]}" =~ "/" ]]; then
-                        local remote_array2=($(echo "${remote_array[0]}" | tr "/" "\n"))
-                        KUBERNETES_NS="${remote_array2[0]}"
-                        KUBERNETES_POD="${remote_array2[1]}"
-                    else
-                        KUBERNETES_POD="${remote_array[0]}"
-                    fi
-                else
-                    LOCAL_FILE="$arg"
+                shift # past argument
+                echo "ERROR: No argument left for container name! Use: -c container_name" >&2
+                exit 11
+            fi
+            continue
+            ;;
+            # - from here on location syntax
+            *)
+
+            # - if it the first location argument
+            # - is it a local file?
+            if [ "${is_from_found:-0}" -eq 0 ]
+            then
+                is_from_found=1
+                if [[ "$1" =~ ":" ]]; then
+                    COPY_FROM_LOCAL=0
                 fi
             fi
 
-        fi
-
+            # - if it contains :
+            # - the argument is a remote location
+            if [[ "$1" =~ ":" ]]; then
+                # Need to split
+                local remote_array=($(echo $1 | tr ":" "\n"))
+                if  [[ "${#remote_array[@]}" -ne 2 ]]
+                then
+                    echo "ERROR: Wrong syntax of REMOTE location: $1" >&2
+                    exit 12
+                fi
+                KUBERNETES_FILE="${remote_array[1]}"
+                if [[ "${remote_array[0]}" =~ "/" ]]; then
+                    local remote_array2=($(echo "${remote_array[0]}" | tr "/" "\n"))
+                    KUBERNETES_NS="${remote_array2[0]}"
+                    KUBERNETES_POD="${remote_array2[1]}"
+                else
+                    KUBERNETES_POD="${remote_array[0]}"
+                fi
+            # - else it is a local file
+            else
+                LOCAL_FILE="$1"
+            fi
+            shift # past argument
+            ;;
+        esac
     done
 
-    # TODO - check whether remote and local file name had be provided, else print an error message what was missing
     cpb64_debug "Found LOCAL_FILE: ${LOCAL_FILE} - REMOTE NS: ${KUBERNETES_NS} - REMOTE POD: ${KUBERNETES_POD} - REMOTE FILE: ${KUBERNETES_FILE} - REMOTE CONTAINER: '${CONTAINER_NAME}' - copy from local file? ($COPY_FROM_LOCAL)"
+
+    # options $LOCAL_FILE, $KUBERNETES_FILE, $KUBERNETES_POD must be set!
+    for required_var in LOCAL_FILE KUBERNETES_FILE KUBERNETES_POD
+    do
+        if [[ ! "${!required_var}" ]]
+        then
+            echo "ERROR: ${required_var} not defined! Please set FROM and TO location!" >&2
+            exit 13
+        fi
+    done
 }
 
 # - parsing commad line arguments with as less as possible dependencies
@@ -167,21 +211,6 @@ function cpb64_execute_kubectl {
 }
 
 ### main
-# optional argument handling
-if [ "$#" -eq 0 ] || [[ "$1" =~ ^(help|-h|--help)$ ]]
-then
-    cpb64_about
-    exit 0
-fi
-
-# optional argument handling
-if [ "$1" == "version" ]
-then
-    cpb64_version
-    exit 0
-fi
-
-# business logic from here on
 cpb64_dependency_check
 cpb64_parse_arguments "$@"
 cpb64_execute_kubectl
