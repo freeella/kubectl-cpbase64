@@ -3,19 +3,20 @@ on:
     # Sequence of patterns matched against refs/tags
     tags:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+  workflow_dispatch:
+
 
 name: Create Release
 
 jobs:
-  build:
+  release:
+    permissions:
+        contents: write
     name: Create Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.1.1
-      - name: Build artefacts
-        run: |
-          zip --junk-paths kubectl-cpbase64 src/kubectl-cpbase64
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
