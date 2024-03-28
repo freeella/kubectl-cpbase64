@@ -11,7 +11,7 @@ Usage:  kubectl cpbase64 [from_location] [to_location] [-c container_name]
 Command line examples:
 
         kubectl cpbase64 version - returns the version of this plugin
-        kubectl cpbase64 help - returns this help screen
+        kubectl cpbase64 help    - returns this help screen
 
 
         # Copy /tmp/foo from a remote pod to /tmp/bar locally
