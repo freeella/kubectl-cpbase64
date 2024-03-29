@@ -22,7 +22,7 @@ jobs:
         run: |
           export project_version=${{ github.ref }}
           # allow manual run
-          if [[ "${{ github.event_name }}  == 'workflow_dispatch' ]]
+          if [[ "${{ github.event_name }}"  == 'workflow_dispatch' ]]
           then
             export project_version=v0.0.1
           fi
