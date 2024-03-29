@@ -4,7 +4,7 @@
 # - calculate defaults based on current directory
 FULLNAME=$(realpath ${BASH_SOURCE[0]})
 SHORTNAME=$(basename ${BASH_SOURCE[0]})
-KUBECTL_CMD=$( echo $SHORTNAME | sed 's|.*-||g' )
+KUBECTL_CMD=$( echo $SHORTNAME | sed 's|kubectl-||g' )
 #BASEDIR=$(dirname ${FULLNAME})
 CPB64_VERSION=1.0.0
 DEBUG= # empty to disable
