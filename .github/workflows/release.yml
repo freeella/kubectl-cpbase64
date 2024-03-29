@@ -30,9 +30,25 @@ jobs:
           echo "event=${{ github.event_name }}"
           echo "project_version=${project_version}"
           echo "project_version=${project_version}" >>$GITHUB_OUTPUT
+      - name: Create Draft Release
+        id: create_draft
+        uses: actions/create-release@v1.1.4
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ steps.vars.outputs.project_version }}
+          release_name: Release ${{ steps.vars.outputs.project_version }}
+          body: |
+            Changes in this Release
+            - First Change
+            - Second Change
+          draft: true
+          prerelease: true
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
