@@ -30,7 +30,10 @@ jobs:
           echo "project_version=${project_version}"
           echo "project_version=${project_version}" >>$GITHUB_OUTPUT
           sed -i "s|^CPB64_VERSION=.*|CPB64_VERSION=$project_version|g" src/kubectl-cpbase64
-          grep CPB64_VERSION src/kubectl-cpbase64
+      - name: Check version
+        id: check
+        run: |
+          grep -Hn CPB64_VERSION src/kubectl-cpbase64
       - name: Create Test Release
         id: create_draft
         uses: actions/create-release@v1.1.4
