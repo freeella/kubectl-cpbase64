@@ -1,7 +1,20 @@
 # kubectl-cpbase64 - an alternative to kubectl cp
 
-'kubectl cpbase64' tries to be an alternative to 'kubectl cp' 
-when 'tar' is not available. Command 'base64' is used instead.
+## install
+
+### manual install
+
+Put script `kubectl-cpbase64` into environment variable PATH.
+
+## purpose
+
+Rootless and distroless containers are very poulare these days. Rootless means that additional tools can't be installed. Distroless or minimal install menan that in many cases `tar` is not available on the container.
+
+`kubectl cp` can't be used to export debug data such as memory dumps from the container, if `tar` is not installed.
+
+Because the command line tool `base64` is still installed on many containers, `kubectl cpbase64` tries to be an alternative to `kubectl cp` by 
+falling back to `base64` and trying to be in sync with command line syntax of `kubectl cp`.
+
 
 ```text
 Usage:  kubectl cpbase64 [from_location] [to_location] [-c container_name]
