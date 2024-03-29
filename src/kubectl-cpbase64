@@ -6,7 +6,7 @@ FULLNAME=$(realpath ${BASH_SOURCE[0]})
 SHORTNAME=$(basename ${BASH_SOURCE[0]})
 KUBECTL_CMD=$( echo $SHORTNAME | sed 's|kubectl-||g' )
 #BASEDIR=$(dirname ${FULLNAME})
-CPB64_VERSION=master
+CPB64_VERSION=main
 DEBUG= # empty to disable
 #DEBUG=1 # any value to enable
 
