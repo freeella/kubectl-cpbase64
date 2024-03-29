@@ -21,12 +21,14 @@ jobs:
         id: vars
         run: |
           export project_version=${{ github.ref }}
+          ls -la
           # allow manual run
           if [[ "${{ github.event_name }}"  == 'workflow_dispatch' ]]
           then
             export project_version=v0.0.1
           fi
           echo "event=${{ github.event_name }}"
+          echo "project_version=${project_version}"
           echo "project_version=${project_version}" >>$GITHUB_OUTPUT
       - name: Create Release
         id: create_release
