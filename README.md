@@ -8,9 +8,9 @@ Put script `kubectl-cpbase64` into environment variable PATH.
 
 ## purpose
 
-Rootless and distroless containers are very poulare these days. Rootless means that additional tools can't be installed. Distroless or minimal install menan that in many cases `tar` is not available on the container.
+Rootless and distroless containers are very popular these days. This means that as less as possible command line tools are installed inside containers and no additional tools can be installed later. Distributions that do not ship `busybox` often do not ship `tar` by default.
 
-`kubectl cp` can't be used to export debug data such as memory dumps from the container, if `tar` is not installed.
+Without `tar` command `kubectl cp` can't be used to copy debug data such as memory dumps from the container.
 
 Because the command line tool `base64` is still installed on many containers, `kubectl cpbase64` tries to be an alternative to `kubectl cp` by 
 falling back to `base64` and trying to be in sync with command line syntax of `kubectl cp`.
