@@ -24,12 +24,13 @@ jobs:
           # allow manual run
           if [[ "${{ github.event_name }}"  == 'workflow_dispatch' ]]
           then
-            export project_version=v0.0.1-draft
+            export project_version=v0.0.1-test
           fi
           echo "event=${{ github.event_name }}"
           echo "project_version=${project_version}"
           echo "project_version=${project_version}" >>$GITHUB_OUTPUT
           sed -i "s|^CPB64_VERSION=.*|CPB64_VERSION=$project_version|g" src/kubectl-cpbase64
+          grep CPB64_VERSION src/kubectl-cpbase64
       - name: Create Test Release
         id: create_draft
         uses: actions/create-release@v1.1.4
