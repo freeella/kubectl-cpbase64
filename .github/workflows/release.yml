@@ -21,15 +21,15 @@ jobs:
         id: vars
         run: |
           export project_version=${{ github.ref }}
-          ls -la
           # allow manual run
           if [[ "${{ github.event_name }}"  == 'workflow_dispatch' ]]
           then
-            export project_version=v0.0.1
+            export project_version=v0.0.1-draft
           fi
           echo "event=${{ github.event_name }}"
           echo "project_version=${project_version}"
           echo "project_version=${project_version}" >>$GITHUB_OUTPUT
+          sed -i "s|^CPB64_VERSION=.*|CPB64_VERSION=$project_version|g" src/kubectl-cpbase64
       - name: Create Draft Release
         id: create_draft
         uses: actions/create-release@v1.1.4
@@ -41,8 +41,7 @@ jobs:
           release_name: Release ${{ steps.vars.outputs.project_version }}
           body: |
             Changes in this Release
-            - First Change
-            - Second Change
+            - This is a test release only
           draft: true
           prerelease: true
       - name: Create Release
