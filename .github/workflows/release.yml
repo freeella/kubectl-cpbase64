@@ -22,7 +22,8 @@ jobs:
         run: |
           project_version=${{ github.ref }}
           project_version=${project_version:-test-run}
-          echo "project_version="${project_version}" >> $GITHUB_OUTPUT
+          echo "event=${{ github.event_name}}"
+          echo "project_version=${project_version}" >> $GITHUB_OUTPUT
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
