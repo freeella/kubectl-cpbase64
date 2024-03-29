@@ -30,7 +30,7 @@ jobs:
           echo "project_version=${project_version}"
           echo "project_version=${project_version}" >>$GITHUB_OUTPUT
           sed -i "s|^CPB64_VERSION=.*|CPB64_VERSION=$project_version|g" src/kubectl-cpbase64
-      - name: Create Draft Release
+      - name: Create Test Release
         id: create_draft
         uses: actions/create-release@v1.1.4
         if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -42,8 +42,8 @@ jobs:
           body: |
             Changes in this Release
             - This is a test release only
-          draft: true
-          prerelease: false
+          draft: false
+          prerelease: true
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
