@@ -65,7 +65,6 @@ function cpb64_dependency_check {
 # - parsing commad line arguments with as less as possible dependencies
 function cpb64_parse_arguments {
     # temp only
-    local is_container_name_next=0
     local is_from_found=0
     local required_var
     # to be used outside of the function
