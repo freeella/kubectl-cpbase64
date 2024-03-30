@@ -4,7 +4,14 @@
 
 ### manual install
 
-Put script `kubectl-cpbase64` into environment variable PATH.
+- Put script `kubectl-cpbase64` into environment variable PATH.
+
+- Manual install via krew
+
+```bash
+wget https://raw.githubusercontent.com/freeella/kubectl-cpbase64/main/src/krew/cpbase64.yaml
+kubectl krew install --manifest=./cpbase64.yaml
+```
 
 ## purpose
 
