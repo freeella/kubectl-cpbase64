@@ -30,6 +30,7 @@ jobs:
           echo "project_version=${project_version}"
           echo "project_version=${project_version}" >>$GITHUB_OUTPUT
           sed -i "s|^CPB64_VERSION=.*|CPB64_VERSION=$project_version|g" src/kubectl-cpbase64
+          zip -j ./kubectl-cpbase64.release-${project_version}.zip src/kubectl-cpbase64 LICENSE README.md
       - name: Check version
         id: check
         run: |
@@ -63,3 +64,21 @@ jobs:
             - Second Change
           draft: false
           prerelease: false
+      - name: Get Upload URL
+        id: get_url
+        run: |
+          if [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]
+          then
+            echo "upload_url=${{ steps.create_draft.outputs.upload_url }}" >>$GITHUB_OUTPUT
+          else
+            echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >>$GITHUB_OUTPUT
+          fi
+      - name: Upload Artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.get_url.outputs.upload_url }}
+          asset_path: ./kubectl-cpbase64.release-${{ steps.vars.outputs.project_version }}.zip
+          asset_name: kubectl-cpbase64.release-${{ steps.vars.outputs.project_version }}.zip
+          asset_content_type: application/zip
