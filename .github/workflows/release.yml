@@ -21,6 +21,7 @@ jobs:
         id: vars
         run: |
           export project_version=${{ github.ref }}
+          export project_version=$( echo $project_version | sed 's|refs/tags/||g' )
           # allow manual run
           if [[ "${{ github.event_name }}"  == 'workflow_dispatch' ]]
           then
