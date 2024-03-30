@@ -25,6 +25,11 @@ jobs:
           if [[ "${{ github.event_name }}"  == 'workflow_dispatch' ]]
           then
             export project_version=v0.0.1-test
+          else
+            # curent changes text
+            # echo "Changes in this Release">./release_changes.md
+            # commit text of last commit
+            git show -s --format=%B >./release_changes.md
           fi
           echo "event=${{ github.event_name }}"
           echo "project_version=${project_version}"
@@ -58,10 +63,7 @@ jobs:
         with:
           tag_name: ${{ steps.vars.outputs.project_version }}
           release_name: Release ${{ steps.vars.outputs.project_version }}
-          body: |
-            Changes in this Release
-            - First Change
-            - Second Change
+          body_path: ./release_changes.md
           draft: false
           prerelease: false
       - name: Get Upload URL
@@ -82,3 +84,4 @@ jobs:
           asset_path: ./kubectl-cpbase64.release-${{ steps.vars.outputs.project_version }}.zip
           asset_name: kubectl-cpbase64.release-${{ steps.vars.outputs.project_version }}.zip
           asset_content_type: application/zip
+
