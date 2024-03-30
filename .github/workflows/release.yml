@@ -48,7 +48,7 @@ jobs:
             Changes in this Release
             - This is a test release only
           draft: true
-          prerelease: true
+          prerelease: false
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
