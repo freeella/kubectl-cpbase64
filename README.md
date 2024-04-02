@@ -9,8 +9,10 @@
 - Manual install via krew
 
 ```bash
-wget https://raw.githubusercontent.com/freeella/kubectl-cpbase64/main/src/krew/cpbase64.yaml
-kubectl krew install --manifest=./cpbase64.yaml
+kubectl krew index add cpbase64 https://github.com/freeella/kubectl-cpbase64.git
+kubectl krew update
+kubectl krew index list
+kubectl krew install cpbase64/cpbase64
 ```
 
 ## purpose
