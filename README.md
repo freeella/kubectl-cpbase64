@@ -6,6 +6,15 @@
 
 - Put script `kubectl-cpbase64` into environment variable PATH.
 
+```bash
+mkdir -p ls ~/.local/bin
+cp src/kubectl-cpbase64 ~/.local/bin
+chmod u+x ~/.local/bin/kubectl-cpbase64
+export PATH=~/.local/bin:${PATH}
+
+kubectl cpbase64 help
+```
+
 ### install via krew plug-in manager
 
 - Install via krew using this repo URL.
