@@ -6,6 +6,8 @@
 
 - Put script `kubectl-cpbase64` into environment variable PATH.
 
+### install via krew plug-in manager
+
 - Install via krew using this repo URL.
 
 ```bash
@@ -13,6 +15,8 @@ kubectl krew index add cpbase64 https://github.com/freeella/kubectl-cpbase64.git
 kubectl krew update
 kubectl krew index list
 kubectl krew install cpbase64/cpbase64
+
+kubectl cpbase64 help
 ```
 
 ## purpose
