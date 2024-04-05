@@ -7,7 +7,7 @@
 - Put script `kubectl-cpbase64` into environment variable PATH.
 
 ```bash
-mkdir -p ls ~/.local/bin
+mkdir -p ~/.local/bin
 cp src/kubectl-cpbase64 ~/.local/bin
 chmod u+x ~/.local/bin/kubectl-cpbase64
 export PATH=~/.local/bin:${PATH}
