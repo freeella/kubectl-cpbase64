@@ -46,6 +46,11 @@ function cpb64_about {
     printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-namespace>/<some-pod>:/tmp/bar\n"
     printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-namespace>/<some-pod>:/tmp/bar -c <specific-container>\n"
     printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:/tmp/bar -c <specific-container>\n"
+    printf "\n\t# ${KUBECTL_CMD} specific:\n"
+    printf "\t# Copy /tmp/foo from a remote pod to /tmp/foo locally\n"
+    printf "\tkubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo /tmp/\n"
+    printf "\tkubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo /tmp\n"
+    printf "\tcd ~/tmp; kubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo .\n"
 }
 
 # - checking for required external tools
@@ -172,6 +177,16 @@ function cpb64_parse_arguments {
             exit 22
         fi
     done
+
+    # Allow . and directory names as local targets
+    if [ -d "${LOCAL_FILE}" ] && [ "${COPY_FROM_LOCAL}" -eq 0 ]
+    then
+        local old_local_file=$LOCAL_FILE
+        # remove ending / for directories if existing
+        LOCAL_FILE="$( echo ${LOCAL_FILE} | sed 's|/$||g' )"
+        LOCAL_FILE="${LOCAL_FILE}/$( basename $KUBERNETES_FILE )"
+        cpb64_debug "Replaced LOCAL_FILE='$old_local_file' by '${LOCAL_FILE}'!"
+    fi
 }
 
 # - executing kubectl for transferring the file
