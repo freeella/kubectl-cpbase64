@@ -52,8 +52,8 @@ jobs:
           body: |
             Changes in this Release
             - This is a test release only
-          draft: true
-          prerelease: false
+          draft: false
+          prerelease: true
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
