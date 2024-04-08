@@ -51,6 +51,11 @@ function cpb64_about {
     printf "\tkubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo /tmp/\n"
     printf "\tkubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo /tmp\n"
     printf "\tcd ~/tmp; kubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo .\n"
+    printf "\t# Copy local /tmp/foo to a remote pod file /tmp/foo\n"
+    printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:/tmp/\n"
+    printf "\t# Copy local /tmp/foo to a remote pod file ~/foo\n"
+    printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:.\n"
+
 }
 
 # - checking for required external tools
@@ -178,7 +183,7 @@ function cpb64_parse_arguments {
         fi
     done
 
-    # Allow . and directory names as local targets
+    # Allow . and directory names as local and remote targets
     if [ -d "${LOCAL_FILE}" ] && [ "${COPY_FROM_LOCAL}" -eq 0 ]
     then
         local old_local_file=$LOCAL_FILE
@@ -186,6 +191,14 @@ function cpb64_parse_arguments {
         LOCAL_FILE="$( echo ${LOCAL_FILE} | sed 's|/$||g' )"
         LOCAL_FILE="${LOCAL_FILE}/$( basename $KUBERNETES_FILE )"
         cpb64_debug "Replaced LOCAL_FILE='$old_local_file' by '${LOCAL_FILE}'!"
+    elif [ "${COPY_FROM_LOCAL}" -eq 1 ] && [[ "${KUBERNETES_FILE}" =~ /$ ]]; then
+        local old_kubernetes_file="${KUBERNETES_FILE}"
+        KUBERNETES_FILE="${KUBERNETES_FILE}$( basename ${LOCAL_FILE} )"
+        cpb64_debug "Replaced KUBERNETES_FILE='$old_kubernetes_file' by '${KUBERNETES_FILE}'!"
+    elif [ "${COPY_FROM_LOCAL}" -eq 1 ] && [[ "${KUBERNETES_FILE}" =~ ^.$ ]]; then
+        local old_kubernetes_file="${KUBERNETES_FILE}"
+        KUBERNETES_FILE="$( basename ${LOCAL_FILE} )"
+        cpb64_debug "Replaced KUBERNETES_FILE='$old_kubernetes_file' by '${KUBERNETES_FILE}'!"
     fi
 }
 
