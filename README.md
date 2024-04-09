@@ -23,8 +23,13 @@ kubectl cpbase64 help
 kubectl krew index add cpbase64 https://github.com/freeella/kubectl-cpbase64.git
 kubectl krew update
 kubectl krew index list
-kubectl krew install cpbase64/cpbase64
 
+# install latest release
+kubectl krew install cpbase64/cpbase64
+# install test version
+kubectl krew install cpbase64/cpbase64-test
+
+# use it
 kubectl cpbase64 help
 ```
 
