@@ -9,190 +9,235 @@ setup() {
     PATH="${BASEDIR}/../main:$PATH"
 }
 
+#### successful tests
 @test "exec_kubectl_cpbase64_version" {
-    kubectl-cpbase64 version
-    [ "$?" -eq 0 ]
+    run kubectl-cpbase64 version
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ^Version:  ]]
 }
 
 @test "exec_kubectl_cpbase64_help" {
-    kubectl-cpbase64 help
-    [ "$?" -eq 0 ]
+    run kubectl-cpbase64 help
+    [ "$status" -eq 0 ]
+    # By default run leaves out empty lines in ${lines[@]}. Use run --keep-empty-lines to retain them.
+    [[ "${lines[1]}" =~ ^Usage:  ]]
 }
 
 @test "exec_kubectl_cpbase64_-h" {
-    kubectl-cpbase64 -h
-    [ "$?" -eq 0 ]
+    run kubectl-cpbase64 -h
+    [ "$status" -eq 0 ]
+    # By default run leaves out empty lines in ${lines[@]}. Use run --keep-empty-lines to retain them.
+    [[ "${lines[1]}" =~ ^Usage:  ]]
 }
 
 @test "exec_kubectl_cpbase64_--help" {
-    kubectl-cpbase64 --help
-    [ "$?" -eq 0 ]
+    run kubectl-cpbase64 --help
+    [ "$status" -eq 0 ]
+    # By default run leaves out empty lines in ${lines[@]}. Use run --keep-empty-lines to retain them.
+    [[ "${lines[1]}" =~ ^Usage:  ]]
 }
 
 @test "exec_kubectl_cpbase64_remote_basic" {
-    kubectl-cpbase64 --test -d pod1:/tmp/foo /tmp/bar
-    [ "$?" -eq 0 ]
+    run kubectl-cpbase64 --test -d pod1:/tmp/foo /tmp/bar
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ^"DEBUG: Found LOCAL_FILE:"  ]]
+    [[ "${lines[1]}" =~ ^";LOCAL_FILE="  ]]
 }
 
 @test "exec_kubectl_cpbase64_remote_pod1tmpfoo_tmpbar" {
-    TESTRESULT=$( kubectl-cpbase64 --test pod1:/tmp/foo /tmp/bar; echo ";RETURN=$?;" )
-    [[ "$TESTRESULT" =~ ";RETURN=0;" ]] &&
-    [[ "$TESTRESULT" =~ ";LOCAL_FILE=/tmp/bar;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_NS=;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_POD=pod1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";CONTAINER_NAME=;" ]] &&
-    [[ "$TESTRESULT" =~ ";COPY_FROM_LOCAL=0;" ]]
+    run kubectl-cpbase64 --test pod1:/tmp/foo /tmp/bar
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/bar;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=0;" ]]
 }
 
 @test "exec_kubectl_cpbase64_remote_ns1_pod1tmpfoo_tmpbar" {
-    TESTRESULT=$( kubectl-cpbase64 --test ns1/pod1:/tmp/foo /tmp/bar; echo ";RETURN=$?;" )
-    [[ "$TESTRESULT" =~ ";RETURN=0;" ]] &&
-    [[ "$TESTRESULT" =~ ";LOCAL_FILE=/tmp/bar;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_NS=ns1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_POD=pod1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";CONTAINER_NAME=;" ]] &&
-    [[ "$TESTRESULT" =~ ";COPY_FROM_LOCAL=0;" ]]
+    run kubectl-cpbase64 --test ns1/pod1:/tmp/foo /tmp/bar
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/bar;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=ns1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=0;" ]]
 }
 
 @test "exec_kubectl_cpbase64_remote_ns1_pod1tmpfoo_tmpbar_container1" {
-    TESTRESULT=$( kubectl-cpbase64 --test ns1/pod1:/tmp/foo /tmp/bar -c container1; echo ";RETURN=$?;" )
-    [[ "$TESTRESULT" =~ ";RETURN=0;" ]] &&
-    [[ "$TESTRESULT" =~ ";LOCAL_FILE=/tmp/bar;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_NS=ns1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_POD=pod1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";CONTAINER_NAME=container1;" ]] &&
-    [[ "$TESTRESULT" =~ ";COPY_FROM_LOCAL=0;" ]]
+    run kubectl-cpbase64 --test ns1/pod1:/tmp/foo /tmp/bar -c container1
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/bar;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=ns1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=container1;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=0;" ]]
 }
 
 @test "exec_kubectl_cpbase64_remote_pod1tmpfoo_tmpbar_container1" {
-    TESTRESULT=$( kubectl-cpbase64 --test pod1:/tmp/foo /tmp/bar -c container1; echo ";RETURN=$?;" )
-    [[ "$TESTRESULT" =~ ";RETURN=0;" ]] &&
-    [[ "$TESTRESULT" =~ ";LOCAL_FILE=/tmp/bar;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_NS=;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_POD=pod1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";CONTAINER_NAME=container1;" ]] &&
-    [[ "$TESTRESULT" =~ ";COPY_FROM_LOCAL=0;" ]]
+    run kubectl-cpbase64 --test pod1:/tmp/foo /tmp/bar -c container1
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/bar;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=container1;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=0;" ]]
 }
 
 @test "exec_kubectl_cpbase64_local_basic" {
-    kubectl-cpbase64 --test -d /tmp/foo pod1:/tmp/bar
-    [ "$?" -eq 0 ]
+    run kubectl-cpbase64 --test -d /tmp/foo pod1:/tmp/bar
+    [ "$status" -eq 0 ]
 }
 
 @test "exec_kubectl_cpbase64_local_tmpfoo_pod1tmpbar" {
-    TESTRESULT=$( kubectl-cpbase64 --test /tmp/foo pod1:/tmp/bar; echo ";RETURN=$?;" )
-    [[ "$TESTRESULT" =~ ";RETURN=0;" ]] &&
-    [[ "$TESTRESULT" =~ ";LOCAL_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_NS=;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_POD=pod1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_FILE=/tmp/bar;" ]] &&
-    [[ "$TESTRESULT" =~ ";CONTAINER_NAME=;" ]] &&
-    [[ "$TESTRESULT" =~ ";COPY_FROM_LOCAL=1;" ]]
+    run kubectl-cpbase64 --test /tmp/foo pod1:/tmp/bar
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/bar;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=1;" ]]
 }
 
 @test "exec_kubectl_cpbase64_local_tmpfoo_ns3_pod1tmpbar" {
-    TESTRESULT=$( kubectl-cpbase64 --test /tmp/foo ns3/pod1:/tmp/bar; echo ";RETURN=$?;" )
-    [[ "$TESTRESULT" =~ ";RETURN=0;" ]] &&
-    [[ "$TESTRESULT" =~ ";LOCAL_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_NS=ns3;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_POD=pod1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_FILE=/tmp/bar;" ]] &&
-    [[ "$TESTRESULT" =~ ";CONTAINER_NAME=;" ]] &&
-    [[ "$TESTRESULT" =~ ";COPY_FROM_LOCAL=1;" ]]
+    run kubectl-cpbase64 --test /tmp/foo ns3/pod1:/tmp/bar
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=ns3;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/bar;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=1;" ]]
 }
 
 @test "exec_kubectl_cpbase64_local_tmpfoo_ns3_pod1tmpbar_cont4" {
-    TESTRESULT=$( kubectl-cpbase64 --test /tmp/foo ns3/pod1:/tmp/bar -c cont4; echo ";RETURN=$?;" )
-    [[ "$TESTRESULT" =~ ";RETURN=0;" ]] &&
-    [[ "$TESTRESULT" =~ ";LOCAL_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_NS=ns3;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_POD=pod1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_FILE=/tmp/bar;" ]] &&
-    [[ "$TESTRESULT" =~ ";CONTAINER_NAME=cont4;" ]] &&
-    [[ "$TESTRESULT" =~ ";COPY_FROM_LOCAL=1;" ]]
+    run kubectl-cpbase64 --test /tmp/foo ns3/pod1:/tmp/bar -c cont4
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=ns3;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/bar;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=cont4;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=1;" ]]
 }
 
 @test "exec_kubectl_cpbase64_local_tmpfoo_pod1tmpbar_cont4" {
-    TESTRESULT=$( kubectl-cpbase64 --test /tmp/foo pod1:/tmp/bar -c cont4; echo ";RETURN=$?;" )
-    [[ "$TESTRESULT" =~ ";RETURN=0;" ]] &&
-    [[ "$TESTRESULT" =~ ";LOCAL_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_NS=;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_POD=pod1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_FILE=/tmp/bar;" ]] &&
-    [[ "$TESTRESULT" =~ ";CONTAINER_NAME=cont4;" ]] &&
-    [[ "$TESTRESULT" =~ ";COPY_FROM_LOCAL=1;" ]]
+    run kubectl-cpbase64 --test /tmp/foo pod1:/tmp/bar -c cont4
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/bar;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=cont4;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=1;" ]]
 }
 
 @test "exec_kubectl_cpbase64_remote_pod1tmpfoo_tmpdir1" {
-    TESTRESULT=$( kubectl-cpbase64 --test pod1:/tmp/foo /tmp/; echo ";RETURN=$?;" )
-    [[ "$TESTRESULT" =~ ";RETURN=0;" ]] &&
-    [[ "$TESTRESULT" =~ ";LOCAL_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_NS=;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_POD=pod1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";CONTAINER_NAME=;" ]] &&
-    [[ "$TESTRESULT" =~ ";COPY_FROM_LOCAL=0;" ]]
+    run kubectl-cpbase64 --test pod1:/tmp/foo /tmp/
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=0;" ]]
 }
 
 @test "exec_kubectl_cpbase64_remote_pod1tmpfoo_tmpdir2" {
-    TESTRESULT=$( kubectl-cpbase64 --test pod1:/tmp/foo /tmp; echo ";RETURN=$?;" )
-    [[ "$TESTRESULT" =~ ";RETURN=0;" ]] &&
-    [[ "$TESTRESULT" =~ ";LOCAL_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_NS=;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_POD=pod1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";CONTAINER_NAME=;" ]] &&
-    [[ "$TESTRESULT" =~ ";COPY_FROM_LOCAL=0;" ]]
+    run kubectl-cpbase64 --test pod1:/tmp/foo /tmp
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=0;" ]]
 }
 
 @test "exec_kubectl_cpbase64_remote_pod1tmpfoo_pwd" {
-    TESTRESULT=$( kubectl-cpbase64 --test pod1:/tmp/foo .; echo ";RETURN=$?;" )
-    [[ "$TESTRESULT" =~ ";RETURN=0;" ]] &&
-    [[ "$TESTRESULT" =~ ";LOCAL_FILE=./foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_NS=;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_POD=pod1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";CONTAINER_NAME=;" ]] &&
-    [[ "$TESTRESULT" =~ ";COPY_FROM_LOCAL=0;" ]]
+    run kubectl-cpbase64 --test pod1:/tmp/foo .
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=./foo;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=0;" ]]
 }
 
 @test "exec_kubectl_cpbase64_local_tmpfoo_pod1tmpdir1" {
-    TESTRESULT=$( kubectl-cpbase64 --test /tmp/foo pod1:/tmp/; echo ";RETURN=$?;" )
-    [[ "$TESTRESULT" =~ ";RETURN=0;" ]] &&
-    [[ "$TESTRESULT" =~ ";LOCAL_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_NS=;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_POD=pod1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";CONTAINER_NAME=;" ]] &&
-    [[ "$TESTRESULT" =~ ";COPY_FROM_LOCAL=1;" ]]
+    run kubectl-cpbase64 --test /tmp/foo pod1:/tmp/
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=1;" ]]
 }
 
 @test "exec_kubectl_cpbase64_local_tmpfoo_pod1pwd" {
-    TESTRESULT=$( kubectl-cpbase64 --test /tmp/foo pod1:.; echo ";RETURN=$?;" )
-    [[ "$TESTRESULT" =~ ";RETURN=0;" ]] &&
-    [[ "$TESTRESULT" =~ ";LOCAL_FILE=/tmp/foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_NS=;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_POD=pod1;" ]] &&
-    [[ "$TESTRESULT" =~ ";KUBERNETES_FILE=foo;" ]] &&
-    [[ "$TESTRESULT" =~ ";CONTAINER_NAME=;" ]] &&
-    [[ "$TESTRESULT" =~ ";COPY_FROM_LOCAL=1;" ]]
+    run kubectl-cpbase64 --test /tmp/foo pod1:.
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=foo;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=1;" ]]
 }
 
-{
-    # TODO - missing unit tests
-cat <<EOF
- # tests with -r / --remote
- # tests with -l / --local
- # tests with -r + -l
- # tests with -r / -l and : inside file names
- # tests with too many / duplicate options
- # - wrong parameters
- # - two remote locations
- # - two local locations
-EOF
+@test "exec_kubectl_cpbase64_local_tmpfoo_ns3_pod1tmpbar:123:text.txt" {
+    run kubectl-cpbase64 --test /tmp/foo -r ns3/pod1:/tmp/bar:123:text.txt
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=ns3;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/bar:123:text.txt;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=1;" ]]
+}
 
-} >/dev/null
+@test "exec_kubectl_cpbase64_local_tmpfoo:123:text.txt_ns3_pod1tmpbar" {
+    run kubectl-cpbase64 --test -l /tmp/foo:123:text.txt ns3/pod1:/tmp/bar
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo:123:text.txt;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=ns3;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/bar;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=1;" ]]
+}
+
+@test "exec_kubectl_cpbase64_local_tmpfoo:123:_ns3_pod1tmpbar:456:" {
+    run kubectl-cpbase64 --test --local /tmp/foo:123:text.txt --remote ns3/pod1:/tmp/bar:456:something.zip
+    [ "$status" -eq 0 ]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo:123:text.txt;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_NS=ns3;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/bar:456:something.zip;" ]]
+    [[ "${lines[0]}" =~ ";CONTAINER_NAME=;" ]]
+    [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=1;" ]]
+}
+
+### negaive tests
+@test "exec_kubectl_cpbase64_local_2times" {
+    run kubectl-cpbase64 --test --local /tmp/foo:123:text.txt --remote ns3/pod1:/tmp/bar:456:something.zip /tmp/foo.txt
+    [ "$status" -eq 26 ]
+}
+
+@test "exec_kubectl_cpbase64_remote_2times" {
+    run kubectl-cpbase64 --test /tmp/foo --remote ns3/pod1:/tmp/bar:456:something.zip pod1:/tmp/bar
+    [ "$status" -eq 26 ]
+}
+
+@test "exec_kubectl_cpbase64_unknown_option" {
+    run kubectl-cpbase64 --test /tmp/foo pod1:/tmp/bar --no-known-option
+    [ "$status" -eq 29 ]
+    [[ "${lines[0]}" =~ ^"ERROR: Unexpected argument: --no-known-option" ]]
+}
