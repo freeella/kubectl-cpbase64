@@ -40,7 +40,8 @@ jobs:
           echo "project_version=${project_version}" >>$GITHUB_OUTPUT
           sed -i "s|^CPB64_VERSION=.*|CPB64_VERSION=$project_version|g" src/main/kubectl-cpbase64
           zip -j ./kubectl-cpbase64.release-${project_version}.zip src/main/kubectl-cpbase64 LICENSE README.md
-          sha256 ./kubectl-cpbase64.release-${project_version}.zip
+          sha256sum ./kubectl-cpbase64.release-${project_version}.zip
+          sha256sum ./kubectl-cpbase64.release-${project_version}.zip | awk '{print "sha256sum="$1}' >>$GITHUB_OUTPUT
 
       - name: Check version
         id: check
@@ -66,6 +67,8 @@ jobs:
           body: |
             Changes in this Release
             - This is a test release only
+
+            Checksum: ${{ steps.vars.outputs.sha256sum }}
           draft: false
           prerelease: true
 
