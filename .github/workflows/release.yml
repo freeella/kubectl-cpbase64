@@ -48,6 +48,9 @@ jobs:
 
       - name: Run Unit Tests
         run: |
+          set -x
+          which bats
+          which kubectl
           bats -r src/tests/
 
       - name: Create Test Release
