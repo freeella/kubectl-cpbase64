@@ -9,12 +9,24 @@ KUBECTL_CMD=$( echo $SHORTNAME | sed 's|kubectl-||g' )
 CPB64_VERSION=main
 DEBUG= # empty to disable
 #DEBUG=1 # any value to enable
+TEST= # empty to disable
+#TEST=1 # any value to enable
 
 ### functions
 # - debugging
 function cpb64_debug {
     [[ $DEBUG ]] && echo "DEBUG: $@"
     return 0
+}
+
+function cpb64_test {
+    if [[ $TEST ]]
+    then
+        printf '%s' ";LOCAL_FILE=${LOCAL_FILE};KUBERNETES_NS=${KUBERNETES_NS};KUBERNETES_POD=${KUBERNETES_POD};KUBERNETES_FILE=${KUBERNETES_FILE};CONTAINER_NAME=${CONTAINER_NAME};COPY_FROM_LOCAL=$COPY_FROM_LOCAL;"
+        exit 0
+    else
+        return 0
+    fi
 }
 
 # - version
@@ -76,7 +88,9 @@ function cpb64_dependency_check {
 function cpb64_parse_arguments {
     # temp only
     local is_from_found=0
+    local is_to_found=0
     local required_var
+    local remote_file_arguent
     # to be used outside of the function
     CONTAINER_NAME=''
     COPY_FROM_LOCAL=1
@@ -117,6 +131,12 @@ function cpb64_parse_arguments {
                 shift # past argument
                 continue
             ;;
+            # - test option
+            --test)
+                TEST=1
+                shift # past argument
+                continue
+            ;;
             # - container option
             -c)
             if [[ $# -gt 1 ]]
@@ -131,8 +151,77 @@ function cpb64_parse_arguments {
             fi
             continue
             ;;
+            # - marks the last parameter as local file
+            -l|--local)
+            if [[ $# -gt 1 ]]
+            then
+                # save name
+                LOCAL_FILE="$2"
+
+                # - it is the first location argument
+                if [ "${is_from_found:-0}" -eq 0 ]
+                then
+                    is_from_found=1
+                    # - local argument
+                    COPY_FROM_LOCAL=1
+                else
+                    is_to_found=1
+                fi
+
+                # cleanup
+                shift # past argument
+                shift # past value
+            else
+                shift # past argument
+                echo "ERROR: No argument left for local file! Use: [-l] /path/to/file" >&2
+                exit 23
+            fi
+            continue
+            ;;
+            -r|--remote)
+            if [[ $# -gt 1 ]]
+            then
+                # save name
+                remote_file_arguent="$2"
+
+                # - it is the first location argument
+                if [ "${is_from_found:-0}" -eq 0 ]
+                then
+                    is_from_found=1
+                    # - remote argument
+                    COPY_FROM_LOCAL=0
+                else
+                    is_to_found=1
+                fi
+
+                # cleanup
+                shift # past argument
+                shift # past value
+            else
+                shift # past argument
+                echo "ERROR: No argument left for local file! Use: [-r] pod-name:/path/to/file" >&2
+                exit 24
+            fi
+            continue
+            ;;
+            # - end of named arguments
             # - from here on location syntax
             *)
+
+            # - no named arguments allowed from here on
+            if [[ "$1" =~ ^- ]]; then
+                echo "ERROR: Unexpected argument: $1" >&2
+                shift # past argument
+                exit 29
+            fi
+
+            # - there can only be one local and one remote argument at the same call
+            if [ "${is_from_found:-0}" -eq 1 ] && [ "${is_to_found:-0}" -eq 1 ]
+            then
+                echo "ERROR: There are already two locations given: $1" >&2
+                shift # past argument
+                exit 26
+            fi
 
             # - if it the first location argument
             # - is it a local file?
@@ -142,26 +231,14 @@ function cpb64_parse_arguments {
                 if [[ "$1" =~ ":" ]]; then
                     COPY_FROM_LOCAL=0
                 fi
+            else
+                is_to_found=1
             fi
 
             # - if it contains :
             # - the argument is a remote location
             if [[ "$1" =~ ":" ]]; then
-                # Need to split
-                local remote_array=($(echo $1 | tr ":" "\n"))
-                if  [[ "${#remote_array[@]}" -ne 2 ]]
-                then
-                    echo "ERROR: Wrong syntax of REMOTE location: $1" >&2
-                    exit 21
-                fi
-                KUBERNETES_FILE="${remote_array[1]}"
-                if [[ "${remote_array[0]}" =~ "/" ]]; then
-                    local remote_array2=($(echo "${remote_array[0]}" | tr "/" "\n"))
-                    KUBERNETES_NS="${remote_array2[0]}"
-                    KUBERNETES_POD="${remote_array2[1]}"
-                else
-                    KUBERNETES_POD="${remote_array[0]}"
-                fi
+                remote_file_arguent=$1
             # - else it is a local file
             else
                 LOCAL_FILE="$1"
@@ -171,17 +248,51 @@ function cpb64_parse_arguments {
         esac
     done
 
+    # - parse remote_file_arguent from here on
+    if [[ "$remote_file_arguent" ]]; then
+        # - need at least a POD and FILE part
+        if [[ "$remote_file_arguent" =~ ":" ]]; then
+            # Need to split
+            local remote_pod_part=$(echo $remote_file_arguent | sed 's|:.*$||g')
+            local remote_file_part=$(echo $remote_file_arguent | sed 's|^[^:]*:||g')
+            if  [[ ! "${remote_pod_part}" ]] || [[ ! "${remote_file_part}" ]]
+            then
+                echo "ERROR: Wrong syntax of REMOTE location: $remote_file_arguent" >&2
+                exit 21
+            fi
+            KUBERNETES_FILE=${remote_file_part}
+
+            if [[ "${remote_pod_part}" =~ "/" ]]; then
+                KUBERNETES_NS=$(echo $remote_pod_part | sed 's|/.*$||g')
+                KUBERNETES_POD=$(echo $remote_pod_part | sed 's|^[^/]*/||g')
+            else
+                KUBERNETES_POD="${remote_pod_part}"
+            fi
+        # - no remote argument found
+        else
+            shift # past argument
+            echo "ERROR: Remote location syntax wrong! Use: [-r] pod-name:/path/to/file" >&2
+            exit 25
+        fi
+    fi
+
     cpb64_debug "Found LOCAL_FILE: ${LOCAL_FILE} - REMOTE NS: ${KUBERNETES_NS} - REMOTE POD: ${KUBERNETES_POD} - REMOTE FILE: ${KUBERNETES_FILE} - REMOTE CONTAINER: '${CONTAINER_NAME}' - copy from local file? ($COPY_FROM_LOCAL)"
 
     # options $LOCAL_FILE, $KUBERNETES_FILE, $KUBERNETES_POD must be set!
+    local location_error_found=0
     for required_var in LOCAL_FILE KUBERNETES_FILE KUBERNETES_POD
     do
         if [[ ! "${!required_var}" ]]
         then
             echo "ERROR: ${required_var} not defined! Please set FROM and TO location!" >&2
-            exit 22
+            location_error_found=1
         fi
     done
+
+    if [ "${location_error_found:-0}" -eq 1 ]
+    then
+        exit 22
+    fi
 
     # Allow . and directory names as local and remote targets
     if [ -d "${LOCAL_FILE}" ] && [ "${COPY_FROM_LOCAL}" -eq 0 ]
@@ -200,6 +311,7 @@ function cpb64_parse_arguments {
         KUBERNETES_FILE="$( basename ${LOCAL_FILE} )"
         cpb64_debug "Replaced KUBERNETES_FILE='$old_kubernetes_file' by '${KUBERNETES_FILE}'!"
     fi
+
 }
 
 # - executing kubectl for transferring the file
@@ -237,4 +349,5 @@ function cpb64_execute_kubectl {
 ### main
 cpb64_dependency_check
 cpb64_parse_arguments "$@"
+cpb64_test
 cpb64_execute_kubectl
