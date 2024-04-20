@@ -67,6 +67,12 @@ function cpb64_about {
     printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:/tmp/\n"
     printf "\t# Copy local /tmp/foo to a remote pod file ~/foo\n"
     printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:.\n"
+    printf "\n\t# Copy local /tmp/foo_2024-04-01_20:33:44 to a remote pod file /tmp/bar_2024-04-01_20:33:44\n"
+    printf "\tkubectl ${KUBECTL_CMD} -l /tmp/foo_2024-04-01_20:33:44 -r <some-pod>:/tmp/bar_2024-04-01_20:33:44\n"
+    printf "\tkubectl ${KUBECTL_CMD} --local /tmp/foo_2024-04-01_20:33:44 --remote <some-pod>:/tmp/bar_2024-04-01_20:33:44\n"
+    printf "\n\t# Copy remote pod file /tmp/foo_2024-04-01_20:33:44 local /tmp/bar_2024-04-01_20:33:44 to a \n"
+    printf "\tkubectl ${KUBECTL_CMD} -r <some-pod>:/tmp/foo_2024-04-01_20:33:44 -l /tmp/bar_2024-04-01_20:33:44 \n"
+    printf "\tkubectl ${KUBECTL_CMD} --remote <some-pod>:/tmp/foo_2024-04-01_20:33:44 --local /tmp/bar_2024-04-01_20:33:44\n"
 
 }
 
