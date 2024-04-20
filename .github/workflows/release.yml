@@ -20,7 +20,7 @@ jobs:
       - name: Setup Bats and bats libs
         uses: bats-core/bats-action@2.0.0
 
-      - name: Set version
+      - name: Set version and create ZIP
         id: vars
         run: |
           export project_version=${{ github.ref }}
@@ -40,6 +40,7 @@ jobs:
           echo "project_version=${project_version}" >>$GITHUB_OUTPUT
           sed -i "s|^CPB64_VERSION=.*|CPB64_VERSION=$project_version|g" src/main/kubectl-cpbase64
           zip -j ./kubectl-cpbase64.release-${project_version}.zip src/main/kubectl-cpbase64 LICENSE README.md
+          sha256 ./kubectl-cpbase64.release-${project_version}.zip
 
       - name: Check version
         id: check
