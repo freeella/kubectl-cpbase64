@@ -16,7 +16,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.1.1
-      - name: Set version
+
+      - name: Setup Bats and bats libs
+        uses: bats-core/bats-action@2.0.0
+
+      - name: Set version and create ZIP
         id: vars
         run: |
           export project_version=${{ github.ref }}
@@ -34,12 +38,23 @@ jobs:
           echo "event=${{ github.event_name }}"
           echo "project_version=${project_version}"
           echo "project_version=${project_version}" >>$GITHUB_OUTPUT
-          sed -i "s|^CPB64_VERSION=.*|CPB64_VERSION=$project_version|g" src/kubectl-cpbase64
-          zip -j ./kubectl-cpbase64.release-${project_version}.zip src/kubectl-cpbase64 LICENSE README.md
+          sed -i "s|^CPB64_VERSION=.*|CPB64_VERSION=$project_version|g" src/main/kubectl-cpbase64
+          zip -j ./kubectl-cpbase64.release-${project_version}.zip src/main/kubectl-cpbase64 LICENSE README.md
+          sha256sum ./kubectl-cpbase64.release-${project_version}.zip
+          sha256sum ./kubectl-cpbase64.release-${project_version}.zip | awk '{print "sha256sum="$1}' >>$GITHUB_OUTPUT
+
       - name: Check version
         id: check
         run: |
-          grep -Hn CPB64_VERSION src/kubectl-cpbase64
+          grep -Hn CPB64_VERSION src/main/kubectl-cpbase64
+
+      - name: Run Unit Tests
+        run: |
+          set -x
+          which bats
+          which kubectl
+          bats -r src/tests/
+
       - name: Create Test Release
         id: create_draft
         uses: actions/create-release@v1.1.4
@@ -52,8 +67,11 @@ jobs:
           body: |
             Changes in this Release
             - This is a test release only
+
+            Checksum: ${{ steps.vars.outputs.sha256sum }}
           draft: false
           prerelease: true
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
@@ -66,6 +84,7 @@ jobs:
           body_path: ./release_changes.md
           draft: false
           prerelease: false
+
       - name: Get Upload URL
         id: get_url
         run: |
@@ -75,6 +94,7 @@ jobs:
           else
             echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >>$GITHUB_OUTPUT
           fi
+
       - name: Upload Artifact
         uses: actions/upload-release-asset@v1
         env:

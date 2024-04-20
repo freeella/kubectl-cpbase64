@@ -28,7 +28,7 @@ spec:
     # 'uri' specifies .zip or .tar.gz archive URL of a plugin
     uri: https://github.com/freeella/kubectl-cpbase64/releases/download/v0.0.1-test/kubectl-cpbase64.release-v0.0.1-test.zip
     # 'sha256' is the sha256sum of the url (archive file) above
-    sha256: 309dd926677c07a786352652ba897ef0c2bd5b012793b9121b12a3b15634bb17
+    sha256: 2b548ed3fc2a0e6715bbec84e30e3b7e79ed2294c11c7670f00ec46b8f95d7bd
     # 'files' lists which files should be extracted out from downloaded archive
     files:
     - from: "kubectl-cpbase64"
