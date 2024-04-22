@@ -83,8 +83,7 @@ jobs:
 
       - name: Update SHA256 hash for Test Release
         id: update_test_hash
-        uses: actions/create-release@v1.1.4
-        if: ${{ github.event_name != 'workflow_dispatch' }}
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           GITHUB_TOKEN:    ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
           SHA256SUM:       ${{ env.SHA256SUM }}
