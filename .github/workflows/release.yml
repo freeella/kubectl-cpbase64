@@ -23,12 +23,12 @@ jobs:
       - name: Set Version
         id: vars
         run: |
-          export PROJECT_VERSION=${{ github.ref }}
-          export PROJECT_VERSION=$( echo $PROJECT_VERSION | sed 's|refs/tags/||g' )
+          PROJECT_VERSION=${{ github.ref }}
+          PROJECT_VERSION=$( echo $PROJECT_VERSION | sed 's|refs/tags/||g' )
           # allow manual run
           if [[ "${{ github.event_name }}"  == 'workflow_dispatch' ]]
           then
-            export project_version=v0.0.1-test
+            PROJECT_VERSION=v0.0.1-test
           fi
           echo "event=${{ github.event_name }}"
           echo "PROJECT_VERSION=${PROJECT_VERSION}"
