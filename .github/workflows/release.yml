@@ -51,7 +51,7 @@ jobs:
           set -x
           zip -j ./kubectl-cpbase64.release-${PROJECT_VERSION}.zip src/main/kubectl-cpbase64 LICENSE README.md
           sha256sum ./kubectl-cpbase64.release-${PROJECT_VERSION}.zip
-          SHA256SUM=$( sha256sum ./kubectl-cpbase64.release-${PROJECT_VERSION}.zip | awk '{print "SHA256SUM="$1}' )
+          SHA256SUM=$( sha256sum ./kubectl-cpbase64.release-${PROJECT_VERSION}.zip | awk '{print $1}' )
           echo SHA256SUM=${SHA256SUM}>>"$GITHUB_ENV"
           if [[ "${{ github.event_name }}"  != 'workflow_dispatch' ]]
           then
@@ -59,7 +59,7 @@ jobs:
             # echo "Changes in this Release">./release_changes.md
             # commit text of last commit
             git show -s --format=%B >./release_changes.md
-            printf '\nChecksum: %s\n' "${SHA256SUM}"
+            printf '\nChecksum: %s\n' "${SHA256SUM} (sha256sum)"
           fi
 
       - name: Create Test Release
@@ -77,7 +77,7 @@ jobs:
             Changes in this Release
             - This is a test release only
 
-            Checksum: ${{ env.SHA256SUM }}
+            Checksum: ${{ env.SHA256SUM }} (sha256sum)
           draft: false
           prerelease: true
 
