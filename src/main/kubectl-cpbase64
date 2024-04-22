@@ -38,42 +38,52 @@ function cpb64_version {
 function cpb64_about {
     cpb64_version
 
-    printf "\nUsage:\tkubectl ${KUBECTL_CMD} [from_location] [to_location] [-c container_name]\n\n"
+    printf '%s' "
+Usage:	kubectl ${KUBECTL_CMD} [from_location] [to_location] [-c container_name]
+	kubectl ${KUBECTL_CMD} [-l|--local] /tmp/foo.txt [-r|--remote] [NS/]some-pod:[.|/tmp/[bar.txt]] [-c container_name]
+	kubectl ${KUBECTL_CMD} [-r|--remote] [namespace/]some-pod:/tmp/foo.txt  [-l|--local] [.|/tmp/[bar.txt]] [-c container_name]
 
-    printf "\t'kubectl ${KUBECTL_CMD}' tries to be an alternative to 'kubectl cp' \n"
-    printf "\twhen 'tar' is not available. Command 'base64' is used instead.\n\n"
-    printf "\tCommand line syntax of 'kubectl ${KUBECTL_CMD}' is similar to 'kubectl cp'!\n\n"
+	'kubectl ${KUBECTL_CMD}' tries to be an alternative to 'kubectl cp'
+	when 'tar' is not available. Command 'base64' is used instead.
 
-    printf "Command line examples:\n\n"
-    printf "\tkubectl ${KUBECTL_CMD} version - returns the version of this plugin\n"
-    printf "\tkubectl ${KUBECTL_CMD} help - returns this help screen\n\n"
+	Command line syntax of 'kubectl ${KUBECTL_CMD}' is similar to 'kubectl cp'!
 
-    printf "\n\t# Copy /tmp/foo from a remote pod to /tmp/bar locally\n"
-    printf "\tkubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo /tmp/bar\n"
-    printf "\tkubectl ${KUBECTL_CMD} <some-namespace>/<some-pod>:/tmp/foo /tmp/bar\n"
-    printf "\tkubectl ${KUBECTL_CMD} <some-namespace>/<some-pod>:/tmp/foo /tmp/bar -c <specific-container>\n"
-    printf "\tkubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo /tmp/bar -c <specific-container>\n"
-    printf "\n\t# Copy local /tmp/foo to a remote pod file /tmp/bar\n"
-    printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:/tmp/bar\n"
-    printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-namespace>/<some-pod>:/tmp/bar\n"
-    printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-namespace>/<some-pod>:/tmp/bar -c <specific-container>\n"
-    printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:/tmp/bar -c <specific-container>\n"
-    printf "\n\t# ${KUBECTL_CMD} specific:\n"
-    printf "\t# Copy /tmp/foo from a remote pod to /tmp/foo locally\n"
-    printf "\tkubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo /tmp/\n"
-    printf "\tkubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo /tmp\n"
-    printf "\tcd ~/tmp; kubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo .\n"
-    printf "\t# Copy local /tmp/foo to a remote pod file /tmp/foo\n"
-    printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:/tmp/\n"
-    printf "\t# Copy local /tmp/foo to a remote pod file ~/foo\n"
-    printf "\tkubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:.\n"
-    printf "\n\t# Copy local /tmp/foo_2024-04-01_20:33:44 to a remote pod file /tmp/bar_2024-04-01_20:33:44\n"
-    printf "\tkubectl ${KUBECTL_CMD} -l /tmp/foo_2024-04-01_20:33:44 -r <some-pod>:/tmp/bar_2024-04-01_20:33:44\n"
-    printf "\tkubectl ${KUBECTL_CMD} --local /tmp/foo_2024-04-01_20:33:44 --remote <some-pod>:/tmp/bar_2024-04-01_20:33:44\n"
-    printf "\n\t# Copy remote pod file /tmp/foo_2024-04-01_20:33:44 local /tmp/bar_2024-04-01_20:33:44 to a \n"
-    printf "\tkubectl ${KUBECTL_CMD} -r <some-pod>:/tmp/foo_2024-04-01_20:33:44 -l /tmp/bar_2024-04-01_20:33:44 \n"
-    printf "\tkubectl ${KUBECTL_CMD} --remote <some-pod>:/tmp/foo_2024-04-01_20:33:44 --local /tmp/bar_2024-04-01_20:33:44\n"
+Command line examples:
 
+	kubectl ${KUBECTL_CMD} version - returns the version of this plugin
+	kubectl ${KUBECTL_CMD} help - returns this help screen
+
+	# Copy /tmp/foo from a remote pod to /tmp/bar locally
+	kubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo /tmp/bar
+	kubectl ${KUBECTL_CMD} <some-namespace>/<some-pod>:/tmp/foo /tmp/bar
+	kubectl ${KUBECTL_CMD} <some-namespace>/<some-pod>:/tmp/foo /tmp/bar -c <specific-container>
+	kubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo /tmp/bar -c <specific-container>
+
+	# Copy local /tmp/foo to a remote pod file /tmp/bar
+	kubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:/tmp/bar
+	kubectl ${KUBECTL_CMD} /tmp/foo <some-namespace>/<some-pod>:/tmp/bar
+	kubectl ${KUBECTL_CMD} /tmp/foo <some-namespace>/<some-pod>:/tmp/bar -c <specific-container>
+	kubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:/tmp/bar -c <specific-container>
+
+	# ${KUBECTL_CMD} specific:
+	# Copy /tmp/foo from a remote pod to /tmp/foo locally
+	kubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo /tmp/
+	kubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo /tmp
+	cd ~/tmp; kubectl ${KUBECTL_CMD} <some-pod>:/tmp/foo .
+
+	# Copy local /tmp/foo to a remote pod file /tmp/foo
+	kubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:/tmp/
+	# Copy local /tmp/foo to a remote pod file ~/foo
+	kubectl ${KUBECTL_CMD} /tmp/foo <some-pod>:.
+
+	# Copy local /tmp/foo_2024-04-01_20:33:44 to some remote pod file /tmp/bar_2024-04-01_20:33:44
+	kubectl ${KUBECTL_CMD} -l /tmp/foo_2024-04-01_20:33:44 -r <some-pod>:/tmp/bar_2024-04-01_20:33:44
+	kubectl ${KUBECTL_CMD} --local /tmp/foo_2024-04-01_20:33:44 --remote <some-pod>:/tmp/bar_2024-04-01_20:33:44
+
+	# Copy from some remote pod file /tmp/foo_2024-04-01_20:33:44 to a local file /tmp/bar_2024-04-01_20:33:44
+	kubectl ${KUBECTL_CMD} -r <some-pod>:/tmp/foo_2024-04-01_20:33:44 -l /tmp/bar_2024-04-01_20:33:44
+	kubectl ${KUBECTL_CMD} --remote <some-pod>:/tmp/foo_2024-04-01_20:33:44 --local /tmp/bar_2024-04-01_20:33:44
+"
 }
 
 # - checking for required external tools
@@ -218,7 +228,7 @@ function cpb64_parse_arguments {
             if [[ "$1" =~ ^- ]]; then
                 echo "ERROR: Unexpected argument: $1" >&2
                 shift # past argument
-                exit 29
+                exit 30
             fi
 
             # - there can only be one local and one remote argument at the same call
@@ -316,6 +326,27 @@ function cpb64_parse_arguments {
         local old_kubernetes_file="${KUBERNETES_FILE}"
         KUBERNETES_FILE="$( basename ${LOCAL_FILE} )"
         cpb64_debug "Replaced KUBERNETES_FILE='$old_kubernetes_file' by '${KUBERNETES_FILE}'!"
+    fi
+
+    # way: local -> remote
+    if [ "${COPY_FROM_LOCAL}" -eq 1 ]
+    then
+        if [ ! -r "${LOCAL_FILE}" ]
+        then
+            echo "ERROR: Source file ${LOCAL_FILE} does not exist or is not readable!" >&2
+            exit 27
+        elif [ -d "${LOCAL_FILE}" ]
+        then
+            echo "ERROR: Not supported! Source ${LOCAL_FILE} is a directoy!" >&2
+            exit 29
+        fi
+    # way: remote -> local
+    else
+        if [ -r "${LOCAL_FILE}" ]
+        then
+            echo "ERROR: Destination file ${LOCAL_FILE} already exist!" >&2
+            exit 28
+        fi
     fi
 
 }

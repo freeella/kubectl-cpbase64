@@ -7,6 +7,13 @@ setup() {
     BASEDIR=$(dirname ${FULLNAME})
     # make executables in src/ visible to PATH
     PATH="${BASEDIR}/../main:$PATH"
+    touch /tmp/foo
+    touch '/tmp/foo:123:text.txt'
+}
+
+teardown() {
+    rm -f /tmp/foo
+    rm -f '/tmp/foo:123:text.txt'
 }
 
 #### successful tests
@@ -137,24 +144,24 @@ setup() {
     [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=1;" ]]
 }
 
-@test "exec_kubectl_cpbase64_remote_pod1tmpfoo_tmpdir1" {
-    run kubectl-cpbase64 --test pod1:/tmp/foo /tmp/
+@test "exec_kubectl_cpbase64_remote_pod1tmpfoo1_tmpdir1" {
+    run kubectl-cpbase64 --test pod1:/tmp/foo1 /tmp/
     [ "$status" -eq 0 ]
-    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo1;" ]]
     [[ "${lines[0]}" =~ ";KUBERNETES_NS=;" ]]
     [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
-    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/foo1;" ]]
     [[ "${lines[0]}" =~ ";CONTAINER_NAME=;" ]]
     [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=0;" ]]
 }
 
-@test "exec_kubectl_cpbase64_remote_pod1tmpfoo_tmpdir2" {
-    run kubectl-cpbase64 --test pod1:/tmp/foo /tmp
+@test "exec_kubectl_cpbase64_remote_pod1tmpfoo1_tmpdir2" {
+    run kubectl-cpbase64 --test pod1:/tmp/foo1 /tmp
     [ "$status" -eq 0 ]
-    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";LOCAL_FILE=/tmp/foo1;" ]]
     [[ "${lines[0]}" =~ ";KUBERNETES_NS=;" ]]
     [[ "${lines[0]}" =~ ";KUBERNETES_POD=pod1;" ]]
-    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/foo;" ]]
+    [[ "${lines[0]}" =~ ";KUBERNETES_FILE=/tmp/foo1;" ]]
     [[ "${lines[0]}" =~ ";CONTAINER_NAME=;" ]]
     [[ "${lines[0]}" =~ ";COPY_FROM_LOCAL=0;" ]]
 }
@@ -238,6 +245,21 @@ setup() {
 
 @test "exec_kubectl_cpbase64_unknown_option" {
     run kubectl-cpbase64 --test /tmp/foo pod1:/tmp/bar --no-known-option
-    [ "$status" -eq 29 ]
+    [ "$status" -eq 30 ]
     [[ "${lines[0]}" =~ ^"ERROR: Unexpected argument: --no-known-option" ]]
+}
+
+@test "exec_kubectl_cpbase64_local_file_not_existing" {
+    run kubectl-cpbase64 --test -d /tmp/foo_not_exists pod1:/tmp/bar
+    [ "$status" -eq 27 ]
+}
+
+@test "exec_kubectl_cpbase64_local_file_is_directory" {
+    run kubectl-cpbase64 --test -d /tmp pod1:/tmp/bar
+    [ "$status" -eq 29 ]
+}
+
+@test "exec_kubectl_cpbase64_remote_to_local_file_existing" {
+    run kubectl-cpbase64 --test -d pod1:/tmp/foo /tmp/foo
+    [ "$status" -eq 28 ]
 }
