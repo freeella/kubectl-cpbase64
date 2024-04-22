@@ -127,8 +127,9 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-          UPLOAD_URL: ${{ env.UPLOAD_URL }}
+          GITHUB_TOKEN:    ${{ github.token }}
+          UPLOAD_URL:      ${{ env.UPLOAD_URL }}
+          PROJECT_VERSION: ${{ env.PROJECT_VERSION }}
         with:
           upload_url: ${{ env.UPLOAD_URL }}
           asset_path: ./kubectl-cpbase64.release-${{ env.PROJECT_VERSION }}.zip
