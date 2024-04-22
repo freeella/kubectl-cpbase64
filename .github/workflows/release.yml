@@ -81,6 +81,23 @@ jobs:
           draft: false
           prerelease: true
 
+      - name: Update SHA256 hash for Test Release
+        id: update_test_hash
+        uses: actions/create-release@v1.1.4
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        env:
+          GITHUB_TOKEN:    ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          SHA256SUM:       ${{ env.SHA256SUM }}
+          PROJECT_VERSION: ${{ env.PROJECT_VERSION }}
+        run: |
+          set -x
+          sed -i "s|sha256: .*|sha256: ${{ env.SHA256SUM }}|g" plugins/cpbase64-test.yaml
+          git status
+          git diff
+          git add plugins/cpbase64-test.yaml
+          git commit -m "Updated SHA256 key for version: ${{ env.PROJECT_VERSION }}"
+          git push
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
@@ -89,7 +106,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
           SHA256SUM:       ${{ env.SHA256SUM }}
           PROJECT_VERSION: ${{ env.PROJECT_VERSION }}
-        with:
+        run:
           tag_name: ${{ env.PROJECT_VERSION }}
           release_name: Release ${{ env.PROJECT_VERSION }}
           body_path: ./release_changes.md
