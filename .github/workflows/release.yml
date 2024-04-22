@@ -20,55 +20,64 @@ jobs:
       - name: Setup Bats and bats libs
         uses: bats-core/bats-action@2.0.0
 
-      - name: Set version and create ZIP
+      - name: Set Version
         id: vars
         run: |
-          export project_version=${{ github.ref }}
-          export project_version=$( echo $project_version | sed 's|refs/tags/||g' )
+          export PROJECT_VERSION=${{ github.ref }}
+          export PROJECT_VERSION=$( echo $PROJECT_VERSION | sed 's|refs/tags/||g' )
           # allow manual run
           if [[ "${{ github.event_name }}"  == 'workflow_dispatch' ]]
           then
             export project_version=v0.0.1-test
-          else
-            # curent changes text
-            # echo "Changes in this Release">./release_changes.md
-            # commit text of last commit
-            git show -s --format=%B >./release_changes.md
           fi
           echo "event=${{ github.event_name }}"
-          echo "project_version=${project_version}"
-          echo "project_version=${project_version}" >>$GITHUB_OUTPUT
-          sed -i "s|^CPB64_VERSION=.*|CPB64_VERSION=$project_version|g" src/main/kubectl-cpbase64
-          zip -j ./kubectl-cpbase64.release-${project_version}.zip src/main/kubectl-cpbase64 LICENSE README.md
-          sha256sum ./kubectl-cpbase64.release-${project_version}.zip
-          sha256sum ./kubectl-cpbase64.release-${project_version}.zip | awk '{print "sha256sum="$1}' >>$GITHUB_OUTPUT
-
-      - name: Check version
-        id: check
-        run: |
-          grep -Hn CPB64_VERSION src/main/kubectl-cpbase64
+          echo "PROJECT_VERSION=${PROJECT_VERSION}"
+          echo "PROJECT_VERSION=${PROJECT_VERSION}" >>"$GITHUB_ENV"
+          sed -i "s|^CPB64_VERSION=.*|CPB64_VERSION=$PROJECT_VERSION|g" src/main/kubectl-cpbase64
 
       - name: Run Unit Tests
         run: |
           set -x
+          # kubectl seems always pre-installed; not needed for syntax checks if not installed
+          command -v kubectl 2>/dev/null || alias kubectl=true
           which bats
           which kubectl
           bats -r src/tests/
+
+      - name: Package Release
+        env:
+            PROJECT_VERSION: ${{ env.PROJECT_VERSION }}
+        run: |
+          set -x
+          zip -j ./kubectl-cpbase64.release-${PROJECT_VERSION}.zip src/main/kubectl-cpbase64 LICENSE README.md
+          sha256sum ./kubectl-cpbase64.release-${PROJECT_VERSION}.zip
+          SHA256SUM=$( sha256sum ./kubectl-cpbase64.release-${PROJECT_VERSION}.zip | awk '{print "SHA256SUM="$1}' )
+          echo SHA256SUM=${SHA256SUM}>>"$GITHUB_ENV"
+          if [[ "${{ github.event_name }}"  != 'workflow_dispatch' ]]
+          then
+            # curent changes text
+            # echo "Changes in this Release">./release_changes.md
+            # commit text of last commit
+            git show -s --format=%B >./release_changes.md
+            printf '\nChecksum: %s\n' "${SHA256SUM}"
+          fi
 
       - name: Create Test Release
         id: create_draft
         uses: actions/create-release@v1.1.4
         if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          GITHUB_TOKEN:    ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          SHA256SUM:       ${{ env.SHA256SUM }}
+          PROJECT_VERSION: ${{ env.PROJECT_VERSION }}
         with:
-          tag_name: ${{ steps.vars.outputs.project_version }}
-          release_name: Release ${{ steps.vars.outputs.project_version }}
+          tag_name: ${{ env.PROJECT_VERSION }}
+          release_name: Release ${{ env.PROJECT_VERSION }}
           body: |
             Changes in this Release
             - This is a test release only
 
-            Checksum: ${{ steps.vars.outputs.sha256sum }}
+            Checksum: ${{ env.SHA256SUM }}
           draft: false
           prerelease: true
 
@@ -78,9 +87,11 @@ jobs:
         if: ${{ github.event_name != 'workflow_dispatch' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          SHA256SUM:       ${{ env.SHA256SUM }}
+          PROJECT_VERSION: ${{ env.PROJECT_VERSION }}
         with:
-          tag_name: ${{ steps.vars.outputs.project_version }}
-          release_name: Release ${{ steps.vars.outputs.project_version }}
+          tag_name: ${{ env.PROJECT_VERSION }}
+          release_name: Release ${{ env.PROJECT_VERSION }}
           body_path: ./release_changes.md
           draft: false
           prerelease: false
@@ -90,18 +101,19 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]
           then
-            echo "upload_url=${{ steps.create_draft.outputs.upload_url }}" >>$GITHUB_OUTPUT
+            echo "UPLOAD_URL=${{ steps.create_draft.outputs.upload_url }}" >>"$GITHUB_ENV"
           else
-            echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >>$GITHUB_OUTPUT
+            echo "UPLOAD_URL=${{ steps.create_release.outputs.upload_url }}" >>"$GITHUB_ENV"
           fi
 
       - name: Upload Artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          UPLOAD_URL: ${{ env.UPLOAD_URL }}
         with:
-          upload_url: ${{ steps.get_url.outputs.upload_url }}
-          asset_path: ./kubectl-cpbase64.release-${{ steps.vars.outputs.project_version }}.zip
-          asset_name: kubectl-cpbase64.release-${{ steps.vars.outputs.project_version }}.zip
+          upload_url: ${{ env.UPLOAD_URL }}
+          asset_path: ./kubectl-cpbase64.release-${{ env.PROJECT_VERSION }}.zip
+          asset_name: kubectl-cpbase64.release-${{ env.PROJECT_VERSION }}.zip
           asset_content_type: application/zip
 
