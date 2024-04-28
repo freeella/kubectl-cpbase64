@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
 
       - name: Setup Bats and bats libs
-        uses: bats-core/bats-action@2.0.0
+        uses: bats-core/bats-action@2
 
       - name: Set Version
         id: vars
@@ -59,12 +59,14 @@ jobs:
             # echo "Changes in this Release">./release_changes.md
             # commit text of last commit
             git show -s --format=%B >./release_changes.md
-            printf '\nChecksum: %s\n' "${SHA256SUM} (sha256sum)"
+            printf '\nChecksum: %s (sha256sum)\n' "${SHA256SUM}" >>./release_changes.md
           fi
+          printf '\nChecksum: %s (sha256sum)\n' "${SHA256SUM}"
 
+      ##### TEST release #####
       - name: Create Test Release
         id: create_draft
-        uses: actions/create-release@v1.1.4
+        uses: actions/create-release@v1
         if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           GITHUB_TOKEN:    ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
@@ -81,13 +83,12 @@ jobs:
           draft: false
           prerelease: true
 
+      ##### TEST release #####
       - name: Update SHA256 hash for Test Release
         id: update_test_hash
         if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           GITHUB_TOKEN:    ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-          SHA256SUM:       ${{ env.SHA256SUM }}
-          PROJECT_VERSION: ${{ env.PROJECT_VERSION }}
         run: |
           set -x
           git config user.name "Release Bot"
@@ -99,9 +100,10 @@ jobs:
           git commit -m "Updated SHA256 key for version: ${{ env.PROJECT_VERSION }}"
           git push
 
+      ##### FINAL release #####
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1.1.4
+        uses: actions/create-release@v1
         if: ${{ github.event_name != 'workflow_dispatch' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
@@ -114,6 +116,27 @@ jobs:
           draft: false
           prerelease: false
 
+      ##### FINAL release #####
+      - name: Update SHA256 hash for Release
+        id: update_release_hash
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        env:
+          GITHUB_TOKEN:    ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        run: |
+          set -x
+          git config user.name "Release Bot"
+          git config user.email "coding@blicke.de"
+          sed -i "s|sha256: .*|sha256: ${{ env.SHA256SUM }}|g" plugins/cpbase64.yaml
+          git status
+          git diff plugins/cpbase64.yaml
+          git add plugins/cpbase64.yaml
+          cp plugins/cpbase64.yaml plugins/cpbase64-${{ env.PROJECT_VERSION }}.yaml
+          git diff plugins/cpbase64-${{ env.PROJECT_VERSION }}.yaml
+          git add plugins/cpbase64-${{ env.PROJECT_VERSION }}.yaml
+          git commit -m "Updated SHA256 key for version: ${{ env.PROJECT_VERSION }}"
+          git push
+
+      #### ALL releases ####
       - name: Get Upload URL
         id: get_url
         run: |
@@ -129,7 +152,6 @@ jobs:
         env:
           GITHUB_TOKEN:    ${{ github.token }}
           UPLOAD_URL:      ${{ env.UPLOAD_URL }}
-          PROJECT_VERSION: ${{ env.PROJECT_VERSION }}
         with:
           upload_url: ${{ env.UPLOAD_URL }}
           asset_path: ./kubectl-cpbase64.release-${{ env.PROJECT_VERSION }}.zip
