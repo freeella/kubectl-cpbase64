@@ -130,6 +130,7 @@ jobs:
           set -x
           git config user.name "Release Bot"
           git config user.email "coding@blicke.de"
+          sed -i 's|version: .*|version: "${{ env.PROJECT_VERSION }}"|g' plugins/cpbase64.yaml
           sed -i 's|sha256: .*|sha256: ${{ env.SHA256SUM }}|g' plugins/cpbase64.yaml
           sed -i 's|uri: .*|uri: https://github.com/freeella/kubectl-cpbase64/releases/download/${{ env.PROJECT_VERSION }}/kubectl-cpbase64.release-${{ env.PROJECT_VERSION }}.zip|g' plugins/cpbase64.yaml
           git status
