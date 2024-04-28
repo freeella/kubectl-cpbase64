@@ -17,6 +17,16 @@ kubectl cpbase64 help
 
 ### install via krew plug-in manager
 
+- Install via krew.
+
+```bash
+# install latest release
+kubectl krew install cpbase64
+
+# use it
+kubectl cpbase64 help
+```
+
 - Install via krew using this repo URL.
 
 ```bash
@@ -45,14 +55,18 @@ falling back to `base64` and trying to be in sync with command line syntax of `k
 
 ```text
 Usage:  kubectl cpbase64 [from_location] [to_location] [-c container_name]
+        kubectl cpbase64 [-l|--local] /tmp/foo.txt [-r|--remote] [NS/]some-pod:[.|/tmp/[bar.txt]] [-c container_name]
+        kubectl cpbase64 [-r|--remote] [namespace/]some-pod:/tmp/foo.txt  [-l|--local] [.|/tmp/[bar.txt]] [-c container_name]
+
+        'kubectl cpbase64' tries to be an alternative to 'kubectl cp'
+        when 'tar' is not available. Command 'base64' is used instead.
 
         Command line syntax of 'kubectl cpbase64' is similar to 'kubectl cp'!
 
 Command line examples:
 
         kubectl cpbase64 version - returns the version of this plugin
-        kubectl cpbase64 help    - returns this help screen
-
+        kubectl cpbase64 help - returns this help screen
 
         # Copy /tmp/foo from a remote pod to /tmp/bar locally
         kubectl cpbase64 <some-pod>:/tmp/foo /tmp/bar
@@ -65,4 +79,23 @@ Command line examples:
         kubectl cpbase64 /tmp/foo <some-namespace>/<some-pod>:/tmp/bar
         kubectl cpbase64 /tmp/foo <some-namespace>/<some-pod>:/tmp/bar -c <specific-container>
         kubectl cpbase64 /tmp/foo <some-pod>:/tmp/bar -c <specific-container>
+
+        # cpbase64 specific:
+        # Copy /tmp/foo from a remote pod to /tmp/foo locally
+        kubectl cpbase64 <some-pod>:/tmp/foo /tmp/
+        kubectl cpbase64 <some-pod>:/tmp/foo /tmp
+        cd ~/tmp; kubectl cpbase64 <some-pod>:/tmp/foo .
+
+        # Copy local /tmp/foo to a remote pod file /tmp/foo
+        kubectl cpbase64 /tmp/foo <some-pod>:/tmp/
+        # Copy local /tmp/foo to a remote pod file ~/foo
+        kubectl cpbase64 /tmp/foo <some-pod>:.
+
+        # Copy local /tmp/foo_2024-04-01_20:33:44 to some remote pod file /tmp/bar_2024-04-01_20:33:44
+        kubectl cpbase64 -l /tmp/foo_2024-04-01_20:33:44 -r <some-pod>:/tmp/bar_2024-04-01_20:33:44
+        kubectl cpbase64 --local /tmp/foo_2024-04-01_20:33:44 --remote <some-pod>:/tmp/bar_2024-04-01_20:33:44
+
+        # Copy from some remote pod file /tmp/foo_2024-04-01_20:33:44 to a local file /tmp/bar_2024-04-01_20:33:44
+        kubectl cpbase64 -r <some-pod>:/tmp/foo_2024-04-01_20:33:44 -l /tmp/bar_2024-04-01_20:33:44
+        kubectl cpbase64 --remote <some-pod>:/tmp/foo_2024-04-01_20:33:44 --local /tmp/bar_2024-04-01_20:33:44
 ```
