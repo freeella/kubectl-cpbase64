@@ -123,6 +123,7 @@ jobs:
           set -x
           git config user.name "Release Bot"
           git config user.email "coding@blicke.de"
+          git checkout main
           sed -i 's|sha256: .*|sha256: ${{ env.SHA256SUM }}|g' plugins/cpbase64.yaml
           sed -i 's|uri: .*|uri: https://github.com/freeella/kubectl-cpbase64/releases/download/${{ env.PROJECT_VERSION }}/kubectl-cpbase64.release-${{ env.PROJECT_VERSION }}.zip|g' plugins/cpbase64.yaml
           git status
@@ -133,7 +134,7 @@ jobs:
           git diff plugins/cpbase64-${PROJECT_VERSION_SHORT}.yaml
           git add plugins/cpbase64-${PROJECT_VERSION_SHORT}.yaml
           git commit -m "Updated SHA256 key for version: ${{ env.PROJECT_VERSION }}"
-          git push origin main
+          git push
 
       #### ALL releases ####
       - name: Get Upload URL
