@@ -36,10 +36,15 @@ kubectl krew index list
 
 # install latest release
 kubectl krew install cpbase64/cpbase64
+
+# install special version (example: cpbase64 v0.2.6) 
+kubectl krew install cpbase64/cpbase64-v026
+
 # install test version
 kubectl krew install cpbase64/cpbase64-test
 
 # use it
+kubectl cpbase64 version
 kubectl cpbase64 help
 ```
 
