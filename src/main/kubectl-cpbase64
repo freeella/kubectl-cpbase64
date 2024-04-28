@@ -90,7 +90,7 @@ Command line examples:
 function cpb64_dependency_check {
     local command
 
-    for command in base64 tr sed kubectl cat realpath basename
+    for command in base64 sed kubectl cat realpath basename
     do
         if ! command -v ${command} >/dev/null
         then
