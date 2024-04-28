@@ -157,3 +157,4 @@ jobs:
           asset_name: kubectl-cpbase64.release-${{ env.PROJECT_VERSION }}.zip
           asset_content_type: application/zip
 
+
