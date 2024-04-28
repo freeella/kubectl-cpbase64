@@ -121,6 +121,10 @@ jobs:
           GITHUB_TOKEN:    ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         run: |
           set -x
+          mkdir main_branch
+          cd main_branch
+          git clone --single-branch --branch main --depth 2 git@github.com:freeella/kubectl-cpbase64.git
+          cd kubectl-cpbase64
           git config user.name "Release Bot"
           git config user.email "coding@blicke.de"
           git checkout main
