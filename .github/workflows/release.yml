@@ -70,8 +70,6 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           GITHUB_TOKEN:    ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-          SHA256SUM:       ${{ env.SHA256SUM }}
-          PROJECT_VERSION: ${{ env.PROJECT_VERSION }}
         with:
           tag_name: ${{ env.PROJECT_VERSION }}
           release_name: Release ${{ env.PROJECT_VERSION }}
@@ -108,7 +106,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
           SHA256SUM:       ${{ env.SHA256SUM }}
-          PROJECT_VERSION: ${{ env.PROJECT_VERSION }}
         with:
           tag_name: ${{ env.PROJECT_VERSION }}
           release_name: Release ${{ env.PROJECT_VERSION }}
@@ -126,7 +123,8 @@ jobs:
           set -x
           git config user.name "Release Bot"
           git config user.email "coding@blicke.de"
-          sed -i "s|sha256: .*|sha256: ${{ env.SHA256SUM }}|g" plugins/cpbase64.yaml
+          sed -i 's|sha256: .*|sha256: ${{ env.SHA256SUM }}|g' plugins/cpbase64.yaml
+          sed -i 's|uri: .*|uri: https://github.com/freeella/kubectl-cpbase64/releases/download/${{ env.PROJECT_VERSION }}/kubectl-cpbase64.release-${{ env.PROJECT_VERSION }}.zip|g' plugins/cpbase64.yaml
           git status
           git diff plugins/cpbase64.yaml
           git add plugins/cpbase64.yaml
