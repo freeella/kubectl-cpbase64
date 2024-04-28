@@ -133,7 +133,7 @@ jobs:
           git diff plugins/cpbase64-${PROJECT_VERSION_SHORT}.yaml
           git add plugins/cpbase64-${PROJECT_VERSION_SHORT}.yaml
           git commit -m "Updated SHA256 key for version: ${{ env.PROJECT_VERSION }}"
-          git push
+          git push origin main
 
       #### ALL releases ####
       - name: Get Upload URL
