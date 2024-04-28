@@ -114,20 +114,22 @@ jobs:
           prerelease: false
 
       ##### FINAL release #####
+      - uses: actions/checkout@v4
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        with:
+          ref: main
+          path: main_branch
+
       - name: Update SHA256 hash for Release
         id: update_release_hash
         if: ${{ github.event_name != 'workflow_dispatch' }}
         env:
           GITHUB_TOKEN:    ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        working-directory: main_branch
         run: |
           set -x
-          mkdir main_branch
-          cd main_branch
-          git clone --single-branch --branch main --depth 2 git@github.com:freeella/kubectl-cpbase64.git
-          cd kubectl-cpbase64
           git config user.name "Release Bot"
           git config user.email "coding@blicke.de"
-          git checkout main
           sed -i 's|sha256: .*|sha256: ${{ env.SHA256SUM }}|g' plugins/cpbase64.yaml
           sed -i 's|uri: .*|uri: https://github.com/freeella/kubectl-cpbase64/releases/download/${{ env.PROJECT_VERSION }}/kubectl-cpbase64.release-${{ env.PROJECT_VERSION }}.zip|g' plugins/cpbase64.yaml
           git status
