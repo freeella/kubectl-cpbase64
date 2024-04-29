@@ -27,11 +27,18 @@ jobs:
             PROJECT_VERSION=${{ github.ref }}
             PROJECT_VERSION=$( echo $PROJECT_VERSION | sed 's|refs/tags/||g' )
           # - or the version number was given via text field
-          elsif [ '${{inputs.confirm}}' == 'true' ] && [[ '${{inputs.version}}' =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
-            PROJECT_VERSION='${{inputs.version}}'
+          elsif [ '${{inputs.confirm}}' == 'true' ]
+          then
+            if [[ '${{inputs.version}}' =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+            then
+              PROJECT_VERSION='${{inputs.version}}'
+            else
+              echo "ERROR: Invalid version given! Must have format 'v0.0.0'!" >&2
+              false
+            fi
           # - not a valid version
           else
-            echo "ERROR: Invalid version given! Must have format 'v0.0.0'!" >&2
+            echo "ERROR: No tag selected or not confirmed!" >&2
             false
           fi
           echo "PROJECT_VERSION=${PROJECT_VERSION}"
