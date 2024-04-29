@@ -22,7 +22,7 @@ jobs:
         id: vars
         run: |
           # not yet implemented, not yet wanted
-          if [ github.event_name != 'workflow_dispatch'  ]
+          if [  '${{ github.event_name }}' != 'workflow_dispatch'  ]
           then
             echo "ERROR: not yet implemented!" >&2
             false
