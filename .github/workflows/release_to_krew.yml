@@ -27,7 +27,7 @@ jobs:
             PROJECT_VERSION=${{ github.ref }}
             PROJECT_VERSION=$( echo $PROJECT_VERSION | sed 's|refs/tags/||g' )
           # - or the version number was given via text field
-          elsif [ '${{inputs.confirm}}' == 'true' ]
+          elif [ '${{inputs.confirm}}' == 'true' ]
           then
             if [[ '${{inputs.version}}' =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
             then
