@@ -53,19 +53,17 @@ jobs:
         with:
           ref: main
 
-      - name: Print new version in krew-index
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        env:
-          GITHUB_REF: ${{ env.PROJECT_VERSION_REF }}
-          GITHUB_REF_TYPE: 'tag'
-        run: |
-          echo "github.ref: ${{ github.ref }}"
-          env | grep -e GITHUB_REF
-          
-      #- name: Update new version in krew-index
-      #  uses: rajatjindal/krew-release-bot@v0.0.46
+      #- name: Set version in krew krew_template_file
       #  if: ${{ github.event_name == 'workflow_dispatch' }}
       #  env:
-      #    github.ref: ${{ env.PROJECT_VERSION_REF }}
-      #  with:
-      #    krew_template_file: 'plugins/.krew.yaml'
+      #    GITHUB_REF: ${{ env.PROJECT_VERSION_REF }}
+      #    GITHUB_REF_TYPE: 'tag'
+      #  run: |
+      #    echo "github.ref: ${{ github.ref }}"
+      #    env | grep -e GITHUB_REF
+          
+      - name: Update new version in krew-index
+        uses: rajatjindal/krew-release-bot@v0.0.46
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        with:
+          krew_template_file: 'plugins/cpbase64.yaml'
