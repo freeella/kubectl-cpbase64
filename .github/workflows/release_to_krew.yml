@@ -56,10 +56,11 @@ jobs:
       - name: Print new version in krew-index
         if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
-          github.ref: ${{ env.PROJECT_VERSION_REF }}
+          GITHUB_REF: ${{ env.PROJECT_VERSION_REF }}
+          GITHUB_REF_TYPE: 'tag'
         run: |
-          echo "ENV: ${{ github.ref }}"
-          env
+          echo "github.ref: ${{ github.ref }}"
+          env | grep -e GITHUB_REF
           
       #- name: Update new version in krew-index
       #  uses: rajatjindal/krew-release-bot@v0.0.46
