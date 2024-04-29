@@ -18,52 +18,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Version
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+        #if: ${{ github.event_name == 'workflow_dispatch' }}
         id: vars
         run: |
+          # not yet implemented, not yet wanted
+          if [ github.event_name != 'workflow_dispatch'  ]
+          then
+            echo "ERROR: not yet implemented!" >&2
+            false
+          fi
+          
           # - if a tag was selected
           if [[ '${{ github.ref }}'  =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           then
             PROJECT_VERSION=${{ github.ref }}
             PROJECT_VERSION=$( echo $PROJECT_VERSION | sed 's|refs/tags/||g' )
-          # - or the version number was given via text field
-          elif [ '${{inputs.confirm}}' == 'true' ]
-          then
-            if [[ '${{inputs.version}}' =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
-            then
-              PROJECT_VERSION='${{inputs.version}}'
-            else
-              echo "ERROR: Invalid version '${{inputs.version}}' given! Must have format 'v0.0.0'!" >&2
-              false
-            fi
+          ## - or the version number was given via text field
+          #elif [ '${{inputs.confirm}}' == 'true' ]
+          #then
+          #  if [[ '${{inputs.version}}' =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          #  then
+          #    PROJECT_VERSION='${{inputs.version}}'
+          #  else
+          #    echo "ERROR: Invalid version '${{inputs.version}}' given! Must have format 'v0.0.0'!" >&2
+          #    false
+          #  fi
           # - not a valid version
           else
-            echo "ERROR: No tag selected or manual input not confirmed!" >&2
+            #echo "ERROR: No tag selected or manual input not confirmed!" >&2
+            echo "ERROR: Selected tag '${{inputs.version}}' must have format 'v0.0.0'!" >&2
             false
           fi
           echo "PROJECT_VERSION=${PROJECT_VERSION}"
           echo "PROJECT_VERSION=${PROJECT_VERSION}" >>"$GITHUB_ENV"
-          PROJECT_VERSION_REF="refs/tags/${PROJECT_VERSION}"
-          echo "PROJECT_VERSION_REF=${PROJECT_VERSION}"
-          echo "PROJECT_VERSION_REF=${PROJECT_VERSION}" >>"$GITHUB_ENV"
-          
+          KREW_TEMPLATE_FILE="plugins/cpbase64-$( echo '${{ env.PROJECT_VERSION }}' | sed 's/\.//g' ).yaml"
+          echo "KREW_TEMPLATE_FILE=${KREW_TEMPLATE_FILE}"
+          echo "KREW_TEMPLATE_FILE=${KREW_TEMPLATE_FILE}" >>"$GITHUB_ENV"
 
       - uses: actions/checkout@v4
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        #with:
-        #  ref: main
+        #if: ${{ github.event_name == 'workflow_dispatch' }}
+        ### main branch contains all plugin version files
+        with:
+          ref: main
 
-      #- name: Set version in krew krew_template_file
-      #  if: ${{ github.event_name == 'workflow_dispatch' }}
-      #  env:
-      #    GITHUB_REF: ${{ env.PROJECT_VERSION_REF }}
-      #    GITHUB_REF_TYPE: 'tag'
-      #  run: |
-      #    echo "github.ref: ${{ github.ref }}"
-      #    env | grep -e GITHUB_REF
-          
       - name: Update new version in krew-index
         uses: rajatjindal/krew-release-bot@v0.0.46
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+        #if: ${{ github.event_name == 'workflow_dispatch' }}
         with:
-          krew_template_file: 'plugins/cpbase64.yaml'
+          krew_template_file:  ${{ env.KREW_TEMPLATE_FILE }}
