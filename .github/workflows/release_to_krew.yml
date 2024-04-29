@@ -33,13 +33,38 @@ jobs:
             then
               PROJECT_VERSION='${{inputs.version}}'
             else
-              echo "ERROR: Invalid version given! Must have format 'v0.0.0'!" >&2
+              echo "ERROR: Invalid version '${{inputs.version}}' given! Must have format 'v0.0.0'!" >&2
               false
             fi
           # - not a valid version
           else
-            echo "ERROR: No tag selected or not confirmed!" >&2
+            echo "ERROR: No tag selected or manual input not confirmed!" >&2
             false
           fi
           echo "PROJECT_VERSION=${PROJECT_VERSION}"
           echo "PROJECT_VERSION=${PROJECT_VERSION}" >>"$GITHUB_ENV"
+          PROJECT_VERSION_REF="refs/tags/${PROJECT_VERSION}"
+          echo "PROJECT_VERSION_REF=${PROJECT_VERSION}"
+          echo "PROJECT_VERSION_REF=${PROJECT_VERSION}" >>"$GITHUB_ENV"
+          
+
+      - uses: actions/checkout@v4
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        with:
+          ref: main
+
+      - name: Print new version in krew-index
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          github.ref: ${{ env.PROJECT_VERSION_REF }}
+        run: |
+          echo "ENV: ${{ github.ref }}"
+          env
+          
+      #- name: Update new version in krew-index
+      #  uses: rajatjindal/krew-release-bot@v0.0.46
+      #  if: ${{ github.event_name == 'workflow_dispatch' }}
+      #  env:
+      #    github.ref: ${{ env.PROJECT_VERSION_REF }}
+      #  with:
+      #    krew_template_file: 'plugins/.krew.yaml'
