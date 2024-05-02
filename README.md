@@ -30,17 +30,17 @@ kubectl cpbase64 help
 - Install via krew using this repo URL.
 
 ```bash
-kubectl krew index add cpbase64 https://github.com/freeella/kubectl-cpbase64.git
+kubectl krew index add cpbase64 'https://github.com/freeella/kubectl-cpbase64.git'
 kubectl krew update
 kubectl krew index list
 
 # install latest release
 kubectl krew install cpbase64/cpbase64
 
-# install special version (example: cpbase64 v0.2.6) 
-kubectl krew install cpbase64/cpbase64-v026
+# install special version (example: cpbase64 v0.2.6)
+kubectl krew install cpbase64/cpbase64-v0-2-6
 
-# install test version
+# install pre-release version
 kubectl krew install cpbase64/cpbase64-test
 
 # use it

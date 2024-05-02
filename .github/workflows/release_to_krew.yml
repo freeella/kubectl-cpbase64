@@ -51,7 +51,7 @@ jobs:
           fi
           echo "PROJECT_VERSION=${PROJECT_VERSION}"
           echo "PROJECT_VERSION=${PROJECT_VERSION}" >>"$GITHUB_ENV"
-          KREW_TEMPLATE_FILE="plugins/cpbase64-$( echo "${PROJECT_VERSION}" | sed 's/\.//g' ).yaml"
+          KREW_TEMPLATE_FILE="plugins/cpbase64-$( echo "${PROJECT_VERSION}" | sed 's/\./-/g' ).yaml"
           echo "KREW_TEMPLATE_FILE=${KREW_TEMPLATE_FILE}"
           echo "KREW_TEMPLATE_FILE=${KREW_TEMPLATE_FILE}" >>"$GITHUB_ENV"
 

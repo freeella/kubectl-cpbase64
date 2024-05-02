@@ -136,10 +136,10 @@ jobs:
           git status
           git diff plugins/cpbase64.yaml
           git add plugins/cpbase64.yaml
-          PROJECT_VERSION_SHORT=$( echo '${{ env.PROJECT_VERSION }}' | sed 's/\.//g' )
-          cp plugins/cpbase64.yaml plugins/cpbase64-${PROJECT_VERSION_SHORT}.yaml
-          git diff plugins/cpbase64-${PROJECT_VERSION_SHORT}.yaml
-          git add plugins/cpbase64-${PROJECT_VERSION_SHORT}.yaml
+          PROJECT_VERSION_YAML_FILE=$( echo '${{ env.PROJECT_VERSION }}' | sed 's/\./-/g' )
+          cp plugins/cpbase64.yaml plugins/cpbase64-${PROJECT_VERSION_YAML_FILE}.yaml
+          git diff plugins/cpbase64-${PROJECT_VERSION_YAML_FILE}.yaml
+          git add plugins/cpbase64-${PROJECT_VERSION_YAML_FILE}.yaml
           git commit -m "Updated SHA256 key for version: ${{ env.PROJECT_VERSION }}"
           git push
 
