@@ -1,0 +1,63 @@
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+  workflow_dispatch:
+
+name: Create Release
+
+jobs:
+  test:
+    permissions:
+        contents: read
+    name: Unit Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Start a local k8s cluster
+        uses: jupyterhub/action-k3s-helm@v4
+        with:
+          # See available:
+          # - k3s release channels at https://github.com/k3s-io/k3s/blob/HEAD/channel.yaml
+          # - k3s versions at https://github.com/k3s-io/k3s/tags
+          # - helm versions at https://github.com/helm/helm/tags
+          k3s-channel: latest
+          # k3s-version: v1.29.0+k3s1
+          # helm-version: v3.13.0
+
+      - name: Verify function of k8s, kubectl, and helm
+        run: |
+          echo "kubeconfig: $KUBECONFIG"
+          kubectl version
+          kubectl get pods --all-namespaces
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bats and bats libs
+        uses: bats-core/bats-action@2.0.0
+
+      - name: Set Version
+        id: vars
+        run: |
+          PROJECT_VERSION=${{ github.ref }}
+          PROJECT_VERSION=$( echo $PROJECT_VERSION | sed 's|refs/tags/||g' )
+          # allow manual run
+          if [[ "${{ github.event_name }}"  == 'workflow_dispatch' ]]
+          then
+            PROJECT_VERSION=v0.0.1-test
+          fi
+          echo "event=${{ github.event_name }}"
+          echo "PROJECT_VERSION=${PROJECT_VERSION}"
+          echo "PROJECT_VERSION=${PROJECT_VERSION}" >>"$GITHUB_ENV"
+          sed -i "s|^CPB64_VERSION=.*|CPB64_VERSION=$PROJECT_VERSION|g" src/main/kubectl-cpbase64
+
+      - name: Run Syntax Unit Tests
+        run: |
+          set -x
+          # kubectl seems always pre-installed; not needed for syntax checks if not installed
+          command -v kubectl 2>/dev/null || alias kubectl=true
+          which bats
+          which kubectl
+          bats -r src/tests/
