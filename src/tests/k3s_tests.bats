@@ -36,11 +36,13 @@ teardown() {
 @test "exec_kubectl_cpbase64_local_basic" {
     run kubectl-cpbase64 -d /tmp/foo cpbase64/cpbase64-pod:/tmp/bar
     [ "$status" -eq 0 ]
+    # TODO - check remote file and local file are binary the same
 }
 
 @test "exec_kubectl_cpbase64_local_basic_with_container" {
     run kubectl-cpbase64 -d /tmp/foo cpbase64/cpbase64-pod:/tmp/bar -c cpb64
     [ "$status" -eq 0 ]
+    # TODO - check remote file and local file are binary the same
 }
 
 @test "exec_kubectl_cpbase64_remote_basic" {
