@@ -33,6 +33,7 @@ jobs:
           kubectl version
           kubectl get pods --all-namespaces
 
+      # - whatever pods are needed to test cpbase64 functionality
       - name: Setup Test PODs
         run: |
           cat <<EOF | kubectl apply -f -
@@ -89,7 +90,11 @@ jobs:
           kubectl wait --for=condition=ready pod --namespace cpbase64 -l name=cpbase64-pod
           kubectl wait --for=condition=ready pod --namespace cpbase64 -l app=cpbase64-deployment
 
-          kubectl get pods -n cpbaseb64
+          # - after initialization
+          echo '#############################'
+          date
+          kubectl get deployments -n cpbase64
+          kubectl get pods -n cpbase64
 
       - name: Setup Bats and bats libs
         uses: bats-core/bats-action@2.0.0
@@ -120,4 +125,12 @@ jobs:
           command -v kubectl 2>/dev/null || alias kubectl=true
           which bats
           which kubectl
-          bats -r src/tests/
+          bats src/tests/syntax_check.bats
+
+      - name: Run K3s Unit Tests
+        run: |
+          set -x
+          # kubectl seems always pre-installed; not needed for syntax checks if not installed
+          which bats
+          which kubectl
+          bats src/tests/k3s_tests.bats
