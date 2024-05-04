@@ -50,6 +50,7 @@ jobs:
             namespace: cpbase64
             labels:
               name: cpbase64-pod
+              app: cpbase64-pod
           spec:
             containers:
               - name: cpb64
@@ -84,6 +85,11 @@ jobs:
           kubectl get namespaces
           kubectl get pods -A
           kubectl get deployments -n cpbase64
+          kubectl get pods -n cpbaseb64
+
+          kubectl wait --for=condition=ready pod -l app=cpbase64-pod
+          kubectl wait --for=condition=ready pod -l app=cpbase64-deployment
+
           kubectl get pods -n cpbaseb64
 
       - name: Setup Bats and bats libs
