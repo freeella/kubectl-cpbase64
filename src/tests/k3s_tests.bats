@@ -24,6 +24,7 @@ teardown() {
     run kubectl-cpbase64 version
     [ "$status" -eq 0 ]
     [[ "${lines[0]}" =~ ^Version:  ]]
+    for i in ${lines[@]}; do echo 'DEBUG: $i'; done
 }
 
 @test "exec_kubectl_cpbase64_help" {
@@ -37,23 +38,27 @@ teardown() {
     run kubectl-cpbase64 -d /tmp/foo cpbase64/cpbase64-pod:/tmp/bar
     [ "$status" -eq 0 ]
     # TODO - check remote file and local file are binary the same
+    for i in ${lines[@]}; do echo 'DEBUG: $i'; done
 }
 
 @test "exec_kubectl_cpbase64_local_basic_with_container" {
     run kubectl-cpbase64 -d /tmp/foo cpbase64/cpbase64-pod:/tmp/bar -c cpb64
     [ "$status" -eq 0 ]
     # TODO - check remote file and local file are binary the same
+    for i in ${lines[@]}; do echo 'DEBUG: $i'; done
 }
 
 @test "exec_kubectl_cpbase64_remote_basic" {
     run kubectl-cpbase64 -d cpbase64/cpbase64-pod:/usr/bin/env /tmp/bar1
     [ "$status" -eq 0 ]
+    for i in ${lines[@]}; do echo 'DEBUG: $i'; done
     # TODO - create test file on pod; check remote file and local file are binary the same
 }
 
 @test "exec_kubectl_cpbase64_remote_basic_with_container" {
     run kubectl-cpbase64 -d cpbase64/cpbase64-pod:/usr/bin/env /tmp/bar2 -c cpb64
     [ "$status" -eq 0 ]
+    for i in ${lines[@]}; do echo 'DEBUG: $i'; done
     # TODO - create test file on pod; check remote file and local file are binary the same
 }
 
