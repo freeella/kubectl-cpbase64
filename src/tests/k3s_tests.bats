@@ -1,6 +1,8 @@
 #!/usr/bin/env bats
 
-setup() {
+# - setup_file() only runs once
+# - setup() before each test
+setup_file() {
     ### config
     # - calculate defaults based on current directory
     FULLNAME=$(realpath ${BATS_TEST_FILENAME})
@@ -13,7 +15,9 @@ setup() {
     sha1sum '/tmp/foo:123:text.txt' | sed 's|^|#|' >&3
 }
 
-teardown() {
+# - teardown_file() only runs once
+# - teardown() after each test
+teardown_file() {
     rm -f /tmp/foo
     rm -f '/tmp/foo:123:text.txt'
     rm -f /tmp/bar*
