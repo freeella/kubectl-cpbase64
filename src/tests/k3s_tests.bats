@@ -32,7 +32,7 @@ teardown() {
     [ "$status" -eq 0 ]
     # By default run leaves out empty lines in ${lines[@]}. Use run --keep-empty-lines to retain them.
     [[ "${lines[1]}" =~ ^Usage:  ]]
-    do echo '# DEBUG: ${lines[1]}' >&3
+    echo '# DEBUG: ${lines[1]}' >&3
 }
 
 @test "exec_kubectl_cpbase64_local_basic" {
