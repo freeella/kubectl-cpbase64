@@ -44,7 +44,7 @@ teardown() {
     [[ "${lines[1]}" =~ ^Usage:  ]]
 }
 
-@test "exec_kubectl_cpbase64_remote_basic" {
+@test "exec_kubectl_cpbase64_remote_basic_with_debug" {
     run kubectl-cpbase64 --test -d pod1:/tmp/foo /tmp/bar
     [ "$status" -eq 0 ]
     [[ "${lines[0]}" =~ ^"DEBUG: Found LOCAL_FILE:"  ]]
