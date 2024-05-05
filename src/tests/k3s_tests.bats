@@ -9,12 +9,12 @@ setup_file() {
     BASEDIR=$(dirname ${FULLNAME})
     # make executables in src/ visible to PATH
     PATH="${BASEDIR}/../main:$PATH"
-    cp $( which kubectl ) /tmp/foo
-    ls -la /tmp/foo                 | sed 's|^|# SETUP_FILE: ls -la  : |' >&3
-    sha1sum /tmp/foo                | sed 's|^|# SETUP_FILE: sha1sum : |' >&3
-    cp $( which kubectl ) '/tmp/foo:123:text.txt'
-    ls -la '/tmp/foo:123:text.txt'  | sed 's|^|# SETUP_FILE: ls -la  : |' >&3
-    sha1sum '/tmp/foo:123:text.txt' | sed 's|^|# SETUP_FILE: sha1sum : |' >&3
+    head --bytes=10240 /dev/urandom >/tmp/foo
+    ls -lah /tmp/foo                 | sed 's|^|# SETUP_FILE: ls -la  : |' >&3
+    sha1sum /tmp/foo                 | sed 's|^|# SETUP_FILE: sha1sum : |' >&3
+    cp /tmp/foo '/tmp/foo:123:text.txt'
+    ls -lah '/tmp/foo:123:text.txt'  | sed 's|^|# SETUP_FILE: ls -la  : |' >&3
+    sha1sum '/tmp/foo:123:text.txt'  | sed 's|^|# SETUP_FILE: sha1sum : |' >&3
 }
 
 # - teardown_file() only runs once
