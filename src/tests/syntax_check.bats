@@ -1,6 +1,8 @@
 #!/usr/bin/env bats
 
-setup() {
+# - setup_file() only runs once
+# - setup() before each test
+setup_file() {
     ### config
     # - calculate defaults based on current directory
     FULLNAME=$(realpath ${BATS_TEST_FILENAME})
@@ -11,7 +13,9 @@ setup() {
     touch '/tmp/foo:123:text.txt'
 }
 
-teardown() {
+# - teardown_file() only runs once
+# - teardown() after each test
+teardown_file() {
     rm -f /tmp/foo
     rm -f '/tmp/foo:123:text.txt'
 }
@@ -44,7 +48,7 @@ teardown() {
     [[ "${lines[1]}" =~ ^Usage:  ]]
 }
 
-@test "exec_kubectl_cpbase64_remote_basic" {
+@test "exec_kubectl_cpbase64_remote_basic_with_debug" {
     run kubectl-cpbase64 --test -d pod1:/tmp/foo /tmp/bar
     [ "$status" -eq 0 ]
     [[ "${lines[0]}" =~ ^"DEBUG: Found LOCAL_FILE:"  ]]

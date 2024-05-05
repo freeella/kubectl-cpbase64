@@ -5,16 +5,17 @@ on:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
   workflow_dispatch:
 
-name: Unit Test
+name: Unit Tests
 
 jobs:
   test:
     permissions:
         contents: read
-    name: Unit Test
+    name: Unit Tests
     runs-on: ubuntu-latest
 
     steps:
+      # Setup dependencies
       - name: Start a local k8s cluster
         uses: jupyterhub/action-k3s-helm@v4
         with:
@@ -32,11 +33,75 @@ jobs:
           kubectl version
           kubectl get pods --all-namespaces
 
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # - whatever pods are needed to test cpbase64 functionality
+      - name: Setup Test PODs
+        run: |
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: cpbase64
+            labels:
+              name: cpbase64
+          ---
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: cpbase64-pod
+            namespace: cpbase64
+            labels:
+              name: cpbase64-pod
+          spec:
+            containers:
+              - name: cpb64
+                image: busybox:latest
+                command: ["/bin/tail"]
+                args: ["-f","/dev/null"]
+          ---
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: cpbase64-deployment
+            namespace: cpbase64
+            labels:
+              app: cpbase64-deployment
+          spec:
+            replicas: 2
+            selector:
+              matchLabels:
+                app: cpbase64-deployment
+            template:
+              metadata:
+                labels:
+                  app: cpbase64-deployment
+              spec:
+                containers:
+                  - name: cpb64
+                    image: busybox:latest
+                    command: ["/bin/tail"]
+                    args: ["-f","/dev/null"]
+          EOF
+
+          kubectl get namespaces
+          kubectl get pods -A
+          kubectl get deployments -n cpbase64
+          kubectl get pods -n cpbaseb64
+
+          kubectl wait --for=condition=ready pod --namespace cpbase64 -l name=cpbase64-pod
+          kubectl wait --for=condition=ready pod --namespace cpbase64 -l app=cpbase64-deployment
+
+          # - after initialization
+          echo '#############################'
+          date
+          kubectl get deployments -n cpbase64
+          kubectl get pods -n cpbase64
 
       - name: Setup Bats and bats libs
         uses: bats-core/bats-action@2.0.0
+
+      # source code starts here 
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set Version
         id: vars
@@ -60,4 +125,12 @@ jobs:
           command -v kubectl 2>/dev/null || alias kubectl=true
           which bats
           which kubectl
-          bats -r src/tests/
+          bats src/tests/syntax_check.bats
+
+      - name: Run K3s Unit Tests
+        run: |
+          set -x
+          # kubectl seems always pre-installed; not needed for syntax checks if not installed
+          which bats
+          which kubectl
+          bats src/tests/k3s_tests.bats
