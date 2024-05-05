@@ -10,9 +10,11 @@ setup_file() {
     # make executables in src/ visible to PATH
     PATH="${BASEDIR}/../main:$PATH"
     cp $( which kubectl ) /tmp/foo
-    sha1sum /tmp/foo                | sed 's|^|# SETUP_FILE: |' >&3
+    ls -la /tmp/foo                 | sed 's|^|# SETUP_FILE: ls -la  : |' >&3
+    sha1sum /tmp/foo                | sed 's|^|# SETUP_FILE: sha1sum : |' >&3
     cp $( which kubectl ) '/tmp/foo:123:text.txt'
-    sha1sum '/tmp/foo:123:text.txt' | sed 's|^|# SETUP_FILE: |' >&3
+    ls -la '/tmp/foo:123:text.txt'  | sed 's|^|# SETUP_FILE: ls -la  : |' >&3
+    sha1sum '/tmp/foo:123:text.txt' | sed 's|^|# SETUP_FILE: sha1sum : |' >&3
 }
 
 # - teardown_file() only runs once
@@ -24,6 +26,7 @@ teardown_file() {
 }
 
 #### successful tests
+# 1
 @test "exec_kubectl_cpbase64_version" {
     run kubectl-cpbase64 version
     [ "$status" -eq 0 ]
@@ -31,6 +34,7 @@ teardown_file() {
     for i in `seq 1 "${#lines[@]}"`; do echo "# DEBUG: ${lines[$i]}" >&3; done
 }
 
+# 2
 @test "exec_kubectl_cpbase64_help" {
     run kubectl-cpbase64 help
     [ "$status" -eq 0 ]
@@ -39,20 +43,23 @@ teardown_file() {
     echo "# DEBUG: ${lines[1]}" >&3
 }
 
+# 3
 @test "exec_kubectl_cpbase64_local_basic" {
-    run kubectl-cpbase64 -d /tmp/foo cpbase64/cpbase64-pod:/tmp/bar
+    run kubectl-cpbase64 -d /tmp/foo cpbase64/cpbase64-pod:/tmp/bar1
     [ "$status" -eq 0 ]
     # TODO - check remote file and local file are binary the same
     for i in `seq 1 "${#lines[@]}"`; do echo "# DEBUG: ${lines[$i]}" >&3; done
 }
 
+# 4
 @test "exec_kubectl_cpbase64_local_basic_with_container" {
-    run kubectl-cpbase64 -d /tmp/foo cpbase64/cpbase64-pod:/tmp/bar -c cpb64
+    run kubectl-cpbase64 -d /tmp/foo cpbase64/cpbase64-pod:/tmp/bar2 -c cpb64
     [ "$status" -eq 0 ]
     # TODO - check remote file and local file are binary the same
     for i in `seq 1 "${#lines[@]}"`; do echo "# DEBUG: ${lines[$i]}" >&3; done
 }
 
+# 5
 @test "exec_kubectl_cpbase64_remote_basic" {
     run kubectl-cpbase64 -d cpbase64/cpbase64-pod:/usr/bin/env /tmp/bar1
     [ "$status" -eq 0 ]
@@ -60,6 +67,7 @@ teardown_file() {
     # TODO - create test file on pod; check remote file and local file are binary the same
 }
 
+# 6
 @test "exec_kubectl_cpbase64_remote_basic_with_container" {
     run kubectl-cpbase64 -d cpbase64/cpbase64-pod:/usr/bin/env /tmp/bar2 -c cpb64
     [ "$status" -eq 0 ]
