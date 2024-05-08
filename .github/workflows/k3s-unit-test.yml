@@ -127,10 +127,21 @@ jobs:
           which kubectl
           bats src/tests/syntax_check.bats
 
+      - name: Run Syntax Unit Tests - Pathname Expansion aware
+        run: |
+          set -x
+          # kubectl seems always pre-installed; not needed for syntax checks if not installed
+          command -v kubectl 2>/dev/null || alias kubectl=true
+          mkdir -p tmp
+          cd tmp
+          touch -- {a..z} {A..Z} _ -
+          bats ../src/tests/syntax_check.bats
+
       - name: Run K3s Unit Tests
         run: |
           set -x
           # kubectl seems always pre-installed; not needed for syntax checks if not installed
           which bats
           which kubectl
-          bats src/tests/k3s_tests.bats
+          cd tmp
+          bats ../src/tests/k3s_tests.bats
