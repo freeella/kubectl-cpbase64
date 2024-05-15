@@ -49,8 +49,8 @@ teardown_file() {
     [ "$status" -eq 0 ]
     # TODO - check remote file and local file are binary the same
     for i in `seq 0 "${#lines[@]}"`; do echo "# DEBUG: ${lines[$i]}" >&3; done
-    run kubectl exec -i cpbase64-pod -n cpbase64 -- sha1sum /tmp/bar1 >&3
-    run sha1sum /tmp/foo >&3
+    kubectl exec -i cpbase64-pod -n cpbase64 -- sha1sum /tmp/bar1 >&3
+    sha1sum /tmp/foo >&3
 }
 
 # 4
