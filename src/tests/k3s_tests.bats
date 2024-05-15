@@ -80,8 +80,27 @@ teardown_file() {
     for i in `seq 0 "${#lines[@]}"`; do echo "# DEBUG: ${lines[$i]}" >&3; done
     kubectl exec -i cpbase64-pod -c cpb64 -n cpbase64 -- sha1sum /usr/bin/env | sed 's|^|# DEBUG: REMOTE - |g' >&3
     sha1sum /tmp/bar2 | sed 's|^|# DEBUG: LOCAL - |g' >&3
-    [ "$( kubectl exec -i cpbase64-pod -c cpb64 -n cpbase64 -- sha1sum /usr/bin/env | awk '{print $1}')" == "$( sha1sum /tmp/bar2 | awk '{print $1}')" ]
+    [ "$( kubectl exec -i cpbase64-pod -c cpb64 -n cpbase64 -- sha1sum /usr/bin/env | awk '{print $1}')" == "$( sha1sum /tmp/bar2 | awk '{print $1}')x" ]
 }
 
+#### local -> remote - : in file name
+# 7
+@test "exec_kubectl_cpbase64_local_dot_to_remote_folder" {
+    run kubectl-cpbase64 -d -l '/tmp/foo:123:text.txt' -r cpbase64/cpbase64-pod:/tmp/ -c cpb64
+    [ "$status" -eq 0 ]
+    for i in `seq 0 "${#lines[@]}"`; do echo "# DEBUG: ${lines[$i]}" >&3; done
+    sha1sum '/tmp/foo:123:text.txt' | sed 's|^|# DEBUG: LOCAL - |g' >&3
+    kubectl exec -i cpbase64-pod -n cpbase64 -- sha1sum '/tmp/foo:123:text.txt' | sed 's|^|# DEBUG: REMOTE - |g' >&3
+    [ "$( kubectl exec -i cpbase64-pod -c cpb64 -n cpbase64 -- sha1sum '/tmp/foo:123:text.txt' | awk '{print $1}')" == "$( sha1sum '/tmp/foo:123:text.txt' | awk '{print $1}')" ]
+}
 
+# 8
+@test "exec_kubectl_cpbase64_local_dot_to_remote_dot" {
+    run kubectl-cpbase64 -d -l '/tmp/foo:123:text.txt' -r 'cpbase64/cpbase64-pod:/tmp/foo:456:text.txt' -c cpb64
+    [ "$status" -eq 0 ]
+    for i in `seq 0 "${#lines[@]}"`; do echo "# DEBUG: ${lines[$i]}" >&3; done
+    sha1sum '/tmp/foo:123:text.txt' | sed 's|^|# DEBUG: LOCAL - |g' >&3
+    kubectl exec -i cpbase64-pod -n cpbase64 -- sha1sum '/tmp/foo:456:text.txt' | sed 's|^|# DEBUG: REMOTE - |g' >&3
+    [ "$( kubectl exec -i cpbase64-pod -c cpb64 -n cpbase64 -- sha1sum '/tmp/foo:456:text.txt' | awk '{print $1}')" == "$( sha1sum '/tmp/foo:123:text.txt' | awk '{print $1}')" ]
+}
 
