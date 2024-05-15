@@ -20,8 +20,7 @@ setup_file() {
 # - teardown_file() only runs once
 # - teardown() after each test
 teardown_file() {
-    rm -f /tmp/foo
-    rm -f '/tmp/foo:123:text.txt'
+    rm -f /tmp/foo*
     rm -f /tmp/bar*
 }
 
