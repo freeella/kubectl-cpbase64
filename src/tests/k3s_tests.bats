@@ -47,18 +47,20 @@ teardown_file() {
 @test "exec_kubectl_cpbase64_local_basic" {
     run kubectl-cpbase64 -d /tmp/foo cpbase64/cpbase64-pod:/tmp/bar1
     [ "$status" -eq 0 ]
-    # TODO - check remote file and local file are binary the same
     for i in `seq 0 "${#lines[@]}"`; do echo "# DEBUG: ${lines[$i]}" >&3; done
-    kubectl exec -i cpbase64-pod -n cpbase64 -- sha1sum /tmp/bar1 >&3
-    sha1sum /tmp/foo >&3
+    sha1sum /tmp/foo | sed 's|^|# DEBUG: LOCAL - |g' >&3
+    kubectl exec -i cpbase64-pod -n cpbase64 -- sha1sum /tmp/bar1 | sed 's|^|# DEBUG: REMOTE - |g' >&3
+    [ "$( kubectl exec -i cpbase64-pod -n cpbase64 -- sha1sum /tmp/bar1 | awk '{print $1}')" == "$( sha1sum /tmp/foo | awk '{print $1}')" ]
 }
 
 # 4
 @test "exec_kubectl_cpbase64_local_basic_with_container" {
     run kubectl-cpbase64 -d /tmp/foo cpbase64/cpbase64-pod:/tmp/bar2 -c cpb64
     [ "$status" -eq 0 ]
-    # TODO - check remote file and local file are binary the same
     for i in `seq 0 "${#lines[@]}"`; do echo "# DEBUG: ${lines[$i]}" >&3; done
+    sha1sum /tmp/foo | sed 's|^|# DEBUG: LOCAL - |g' >&3
+    kubectl exec -i cpbase64-pod -n cpbase64 -- sha1sum /tmp/bar2 | sed 's|^|# DEBUG: REMOTE - |g' >&3
+    [ "$( kubectl exec -i cpbase64-pod -c cpb64 -n cpbase64 -- sha1sum /tmp/bar2 | awk '{print $1}')" == "$( sha1sum /tmp/foo | awk '{print $1}')" ]
 }
 
 # 5
@@ -66,7 +68,9 @@ teardown_file() {
     run kubectl-cpbase64 -d cpbase64/cpbase64-pod:/usr/bin/env /tmp/bar1
     [ "$status" -eq 0 ]
     for i in `seq 0 "${#lines[@]}"`; do echo "# DEBUG: ${lines[$i]}" >&3; done
-    # TODO - create test file on pod; check remote file and local file are binary the same
+    kubectl exec -i cpbase64-pod -n cpbase64 -- sha1sum /usr/bin/env | sed 's|^|# DEBUG: REMOTE - |g' >&3
+    sha1sum /tmp/bar1 | sed 's|^|# DEBUG: LOCAL - |g' >&3
+    [ "$( kubectl exec -i cpbase64-pod -n cpbase64 -- sha1sum /usr/bin/env | awk '{print $1}')" == "$( sha1sum /tmp/bar1 | awk '{print $1}')" ]
 }
 
 # 6
@@ -74,7 +78,9 @@ teardown_file() {
     run kubectl-cpbase64 -d cpbase64/cpbase64-pod:/usr/bin/env /tmp/bar2 -c cpb64
     [ "$status" -eq 0 ]
     for i in `seq 0 "${#lines[@]}"`; do echo "# DEBUG: ${lines[$i]}" >&3; done
-    # TODO - create test file on pod; check remote file and local file are binary the same
+    kubectl exec -i cpbase64-pod -c cpb64 -n cpbase64 -- sha1sum /usr/bin/env | sed 's|^|# DEBUG: REMOTE - |g' >&3
+    sha1sum /tmp/bar2 | sed 's|^|# DEBUG: LOCAL - |g' >&3
+    [ "$( kubectl exec -i cpbase64-pod -c cpb64 -n cpbase64 -- sha1sum /usr/bin/env | awk '{print $1}')" == "$( sha1sum /tmp/bar2 | awk '{print $1}')" ]
 }
 
 
