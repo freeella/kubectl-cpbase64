@@ -27,14 +27,17 @@ jobs:
           GITHUB_RUN_ID=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "${GITHUB_WORKFLOW_URL}/runs" | jq -r ".workflow_runs[] | select( (.run_number == ${GITHUB_RUN_NUMBER}) ) | .id " )
           echo '############### jobs 1 '
           GITHUB_RUN_URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs"
-          NUMBER_OF_ACTIVE_STEPS=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq -r '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] | select( (.status == "in_progress" ) ) | .number ' | wc -l )
-          while [[ $NUMBER_OF_ACTIVE_STEPS -gt 0 ]]
+          STATUS_OF_LAST_STEP=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq -r '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] | select( (.name == "Run K3s Unit Tests" ) ) | .status ' )
+          while [[  ! "${STATUS_OF_LAST_STEP}" =~  *"completed"* ]]
           do
           date
           echo "### $NUMBER_OF_ACTIVE_STEPS in progress"
           curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] | select( (.status == "in_progress" ) ) '
           sleep 10
           done
+          date
+          curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] '
+
 
 
   test:
