@@ -37,9 +37,8 @@ jobs:
           "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
           GITHUB_WORKFLOW_URL=$( "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" | jq '.workflow_url' )
-          curl -sH "Authorization: Bearer ${GITHUB_TOKEN}" \
-          "${GITHUB_WORKFLOW_URL}/runs" | \
-          jq '.'
+          echo '###############'
+          curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "${GITHUB_WORKFLOW_URL}/runs" | jq '.'
 
       # - whatever pods are needed to test cpbase64 functionality
       - name: Setup Test PODs
