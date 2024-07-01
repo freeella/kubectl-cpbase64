@@ -33,11 +33,13 @@ jobs:
           echo "kubeconfig: $KUBECONFIG"
           kubectl version
           kubectl get pods --all-namespaces
+          echo '############### long'
           curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
           "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-          GITHUB_WORKFLOW_URL=$( "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" | jq '.workflow_url' )
-          echo '###############'
+          echo '############### var'
+          GITHUB_WORKFLOW_URL=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" | jq '.workflow_url' )
+          echo '############### long'
           curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "${GITHUB_WORKFLOW_URL}/runs" | jq '.'
 
       # - whatever pods are needed to test cpbase64 functionality
