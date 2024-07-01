@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
-      - name: Sleep without reason
-        id: wait-for-step-
+      - name: Monitoring step
+        id: wait-for-unit-tests
         run: |
           echo '############### current workflow'
           sleep 10
@@ -28,17 +28,17 @@ jobs:
           echo '############### jobs 1 '
           GITHUB_RUN_URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs"
           STATUS_OF_LAST_STEP="first_run"
-          while ! [  "${STATUS_OF_LAST_STEP}" == "completed" ]
+          while [  "${STATUS_OF_LAST_STEP}" != "completed" ]
           do
           date
           echo "### waiting for 'Run K3s Unit Tests': '$STATUS_OF_LAST_STEP'"
           echo "### currently executed step:"
           curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] | select( (.status == "in_progress" ) ) '
-          sleep 10
+          sleep 5
           STATUS_OF_LAST_STEP=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq -r '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] | select( (.name == "Run K3s Unit Tests" ) ) | .status ' )
           done
           date
-          echo "### full list of steps:"
+          echo "### full list of steps before exiting:"
           curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] '
 
 
