@@ -8,6 +8,16 @@ on:
 name: Unit Tests
 
 jobs:
+  sleep:
+    permissions:
+        contents: read
+    name: Sleep 4 min
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for jobs
+        run: |
+          sleep 240
+  
   test:
     permissions:
         contents: read
@@ -15,6 +25,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check for jobs
+        run: |
+          
+          echo '############### long'
+          set -x
+          curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          set +x
+          echo '############### var'
+          GITHUB_WORKFLOW_URL=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" | jq -r '.workflow_url' )
+          # Show the current run_number of the workflow run
+          echo "CURRENT_RUN_NUMBER is ${GITHUB_RUN_NUMBER}"
+          echo "GITHUB_WORKFLOW_URL is ${GITHUB_WORKFLOW_URL}"
+          echo '############### long'
+          set -x
+          curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "${GITHUB_WORKFLOW_URL}/runs" | jq '.workflow_runs '
+          set +x
+    
       # Setup dependencies
       - name: Start a local k8s cluster
         uses: jupyterhub/action-k3s-helm@v4
@@ -34,10 +63,12 @@ jobs:
           echo "kubeconfig: $KUBECONFIG"
           kubectl version
           kubectl get pods --all-namespaces
-          set -x
+          
           echo '############### long'
+          set -x
           curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
           "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          set +x
           echo '############### var'
           GITHUB_WORKFLOW_URL=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
           "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" | jq -r '.workflow_url' )
@@ -45,7 +76,9 @@ jobs:
           echo "CURRENT_RUN_NUMBER is ${GITHUB_RUN_NUMBER}"
           echo "GITHUB_WORKFLOW_URL is ${GITHUB_WORKFLOW_URL}"
           echo '############### long'
-          curl -vH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "${GITHUB_WORKFLOW_URL}/runs" 
+          set -x
+          curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "${GITHUB_WORKFLOW_URL}/runs" | jq '.workflow_runs '
+          set +x
 
       # - whatever pods are needed to test cpbase64 functionality
       - name: Setup Test PODs
