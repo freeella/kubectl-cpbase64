@@ -36,7 +36,7 @@ jobs:
           GITHUB_WORKFLOW_URL=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
           "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" | jq -r '.workflow_url' )
           GITHUB_WORKFLOW_ID=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-          "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" | jq -r '.workflow_id' )
+          "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" | jq -r '.workflow_url' )
           # Show the current run_number of the workflow run
           echo "CURRENT_RUN_NUMBER is ${GITHUB_RUN_NUMBER}"
           echo "GITHUB_WORKFLOW_URL is ${GITHUB_WORKFLOW_URL}"
@@ -44,8 +44,10 @@ jobs:
           set -x
           curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "${GITHUB_WORKFLOW_URL}/runs" | jq ".workflow_runs[] | select( (.status == \"in_progress\") ) | .id "
           set +x
-          echo "############### jobs for id: ${GITHUB_WORKFLOW_ID}"
-          curl -sH "Authorization: Bearer ${GITHUB_TOKEN}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_WORKFLOW_ID}/jobs" | jq '.'
+          echo "############### my run"
+          GITHUB_RUN_ID=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "${GITHUB_WORKFLOW_URL}/runs" | jq -r ".workflow_runs[] | select( (.status == \"in_progress\") and (.run_number == ${GITHUB_RUN_NUMBER}) ) | .id " )
+          echo '############### jobs'
+          curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs" | jq '.'
     
       # Setup dependencies
       - name: Start a local k8s cluster
@@ -83,8 +85,10 @@ jobs:
           set -x
           curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "${GITHUB_WORKFLOW_URL}/runs" | jq ".workflow_runs[] | select( (.status == \"in_progress\") ) | .id "
           set +x
+          echo "############### my run"
+          GITHUB_RUN_ID=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "${GITHUB_WORKFLOW_URL}/runs" | jq -r ".workflow_runs[] | select( (.status == \"in_progress\") and (.run_number == ${GITHUB_RUN_NUMBER}) ) | .id " )
           echo '############### jobs'
-          curl -sH "Authorization: Bearer ${GITHUB_TOKEN}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_WORKFLOW_ID}/jobs" | jq '.'
+          curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs" | jq '.'
 
       # - whatever pods are needed to test cpbase64 functionality
       - name: Setup Test PODs
