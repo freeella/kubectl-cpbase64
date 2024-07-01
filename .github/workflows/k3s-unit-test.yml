@@ -14,7 +14,7 @@ jobs:
     name: Sleep 4 min
     runs-on: ubuntu-latest
     steps:
-      - name: Check for jobs
+      - name: Sleep without reason
         run: |
           sleep 240
   
