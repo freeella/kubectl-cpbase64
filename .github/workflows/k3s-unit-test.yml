@@ -33,9 +33,8 @@ jobs:
           echo "kubeconfig: $KUBECONFIG"
           kubectl version
           kubectl get pods --all-namespaces
-          GITHUB_WORKFLOW_URL=$(curl -sH "Authorization: Bearer ${GITHUB_TOKEN}" \
-          "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" | \
-          jq '.' 
+          GITHUB_WORKFLOW_URL=$(curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" 
 
       # - whatever pods are needed to test cpbase64 functionality
       - name: Setup Test PODs
