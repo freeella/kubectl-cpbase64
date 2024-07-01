@@ -38,6 +38,7 @@ jobs:
           STATUS_OF_LAST_STEP=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq -r '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] | select( (.name == "Run K3s Unit Tests" ) ) | .status ' )
           done
           date
+          echo "### full list of steps:"
           curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] '
 
 
