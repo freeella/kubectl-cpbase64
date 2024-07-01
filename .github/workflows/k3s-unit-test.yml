@@ -11,8 +11,9 @@ jobs:
   sleep:
     permissions:
         contents: read
-    name: Sleep 4 min
+    name: Monitoring Job
     runs-on: ubuntu-latest
+    timeout-minutes: 4
     steps:
       - name: Sleep without reason
         id: wait-for-step-
@@ -24,11 +25,14 @@ jobs:
           echo "CURRENT_RUN_NUMBER is ${GITHUB_RUN_NUMBER}"
           echo "GITHUB_WORKFLOW_URL is ${GITHUB_WORKFLOW_URL}"
           GITHUB_RUN_ID=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "${GITHUB_WORKFLOW_URL}/runs" | jq -r ".workflow_runs[] | select( (.run_number == ${GITHUB_RUN_NUMBER}) ) | .id " )
-          echo '############### jobs'
+          echo '############### jobs 1 '
           GITHUB_RUN_URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs"
-          curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[]  '
-          sleep 10
-          curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[]  '
+          NUMBER_OF_ACTIVE_STEPS=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq -r '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] | select( (.status == "in_progress" ) ) | .number ' | wc -l )
+          while [[ $NUMBER_OF_ACTIVE_STEPS -gt 0 ]]
+          do
+          echo "### $NUMBER_OF_ACTIVE_STEPS in progress"
+          curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] | select( (.status == "in_progress" ) ) '
+          done
 
 
   test:
