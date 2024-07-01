@@ -36,7 +36,7 @@ jobs:
           GITHUB_WORKFLOW_URL=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
           "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" | jq -r '.workflow_url' )
           GITHUB_WORKFLOW_ID=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-          "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" | jq -r '.workflow_url' )
+          "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" | jq -r '.workflow_id' )
           # Show the current run_number of the workflow run
           echo "CURRENT_RUN_NUMBER is ${GITHUB_RUN_NUMBER}"
           echo "GITHUB_WORKFLOW_URL is ${GITHUB_WORKFLOW_URL}"
@@ -44,7 +44,7 @@ jobs:
           set -x
           curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "${GITHUB_WORKFLOW_URL}/runs" | jq ".workflow_runs[] | select( (.status == \"in_progress\") ) | .id "
           set +x
-          echo '############### jobs'
+          echo "############### jobs for id: ${GITHUB_WORKFLOW_ID}"
           curl -sH "Authorization: Bearer ${GITHUB_TOKEN}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_WORKFLOW_ID}/jobs" | jq '.'
     
       # Setup dependencies
