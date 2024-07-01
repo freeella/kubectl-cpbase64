@@ -30,8 +30,10 @@ jobs:
           NUMBER_OF_ACTIVE_STEPS=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq -r '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] | select( (.status == "in_progress" ) ) | .number ' | wc -l )
           while [[ $NUMBER_OF_ACTIVE_STEPS -gt 0 ]]
           do
+          date
           echo "### $NUMBER_OF_ACTIVE_STEPS in progress"
           curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] | select( (.status == "in_progress" ) ) '
+          sleep 10
           done
 
 
