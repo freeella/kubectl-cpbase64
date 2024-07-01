@@ -18,6 +18,7 @@ jobs:
       # Setup dependencies
       - name: Start a local k8s cluster
         uses: jupyterhub/action-k3s-helm@v4
+        timeout-minutes: 4
         with:
           # See available:
           # - k3s release channels at https://github.com/k3s-io/k3s/blob/HEAD/channel.yaml
