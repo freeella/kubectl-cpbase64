@@ -21,7 +21,6 @@ jobs:
           echo '############### current workflow'
           # - can we be too early here?
           # - if so, we need to implement a loop as well
-          sleep 10
           GITHUB_WORKFLOW_URL=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
           "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" | jq -r '.workflow_url' )
           echo "GITHUB_WORKFLOW_URL is ${GITHUB_WORKFLOW_URL}"
@@ -64,7 +63,6 @@ jobs:
           echo '############### current workflow'
           # - can we be too early here?
           # - if so, we need to implement a loop as well
-          sleep 10
           GITHUB_WORKFLOW_URL=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
           "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" | jq -r '.workflow_url' )
           echo "GITHUB_WORKFLOW_URL is ${GITHUB_WORKFLOW_URL}"
