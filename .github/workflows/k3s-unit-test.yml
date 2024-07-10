@@ -26,13 +26,17 @@ jobs:
           echo "GITHUB_WORKFLOW_URL is ${GITHUB_WORKFLOW_URL}"
           # provided by GitHub
           echo "GITHUB_RUN_NUMBER is ${GITHUB_RUN_NUMBER}"
-          GITHUB_RUN_ID=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "${GITHUB_WORKFLOW_URL}/runs" | jq -r ".workflow_runs[] | select( (.run_number == ${GITHUB_RUN_NUMBER}) ) | .id " )
+
+          GITHUB_RUN_ID=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "${GITHUB_WORKFLOW_URL}/runs" | \
+          jq -r ".workflow_runs[] | select( (.run_number == ${GITHUB_RUN_NUMBER}) ) | .id " )
           echo "GITHUB_RUN_ID is ${GITHUB_RUN_ID}"
           GITHUB_RUN_URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs"
           echo "GITHUB_RUN_URL is ${GITHUB_RUN_URL}"
 
-          echo "### START: full list of steps before exiting:"
-          curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] '
+          echo "### START: full list of steps before loop ###"
+          curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | \
+          jq '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] '
+          echo "### END: full list of steps before loop ###"
 
           STATUS_OF_LAST_STEP="first_run"
           while [  "${STATUS_OF_LAST_STEP}" != "completed" ]
@@ -42,13 +46,13 @@ jobs:
             curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] | select( (.status == "in_progress" ) ) '
             sleep 5
             STATUS_OF_LAST_STEP=$( curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq -r '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] | select( (.name == "Run K3s Unit Tests" ) ) | .status ' )
-            echo "### status of 'Run K3s Unit Tests': '$STATUS_OF_LAST_STEP'"
+            echo "### status of step --> 'Run K3s Unit Tests' <--- = '$STATUS_OF_LAST_STEP'"
           done
           date
 
-          echo "### END: full list of steps before exiting:"
+          echo "### START: full list of steps after loop ###"
           curl -sH "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$GITHUB_RUN_URL" | jq '.jobs[] | select( (.name == "Unit Tests" ) ) | .steps[] '
-
+          echo "### END: full list of steps after loop ###"
 
 
   test:
