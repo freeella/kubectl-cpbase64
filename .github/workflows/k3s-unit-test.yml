@@ -9,6 +9,7 @@ name: Unit Tests
 
 jobs:
   sleep:
+    environment: 'PROD Approval'
     permissions:
         contents: read
     name: Monitoring Job
